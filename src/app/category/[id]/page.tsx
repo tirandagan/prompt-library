@@ -9,7 +9,7 @@ import { ArrowLeft, Filter, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Toast, useToast } from "@/components/ui/Toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface PageProps {
     params: Promise<{
@@ -24,9 +24,9 @@ export default function CategoryPage({ params }: PageProps) {
     const { toasts, showToast, removeToast } = useToast();
 
     // Resolve params
-    useState(() => {
+    useEffect(() => {
         params.then(setResolvedParams);
-    });
+    }, [params]);
 
     if (!resolvedParams) {
         return null;

@@ -9,7 +9,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { Toast, useToast } from "@/components/ui/Toast";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface PageProps {
     params: Promise<{
@@ -24,9 +24,9 @@ export default function PromptDetailPage({ params }: PageProps) {
     const [isLiked, setIsLiked] = useState(false);
 
     // Resolve params
-    useState(() => {
+    useEffect(() => {
         params.then(setResolvedParams);
-    });
+    }, [params]);
 
     if (!resolvedParams) {
         return null; // Loading state
