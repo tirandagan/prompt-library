@@ -5,6 +5,7 @@ import { Search, Menu, X, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 export function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,7 +38,7 @@ export function Navbar() {
                     </div>
 
                     <div className="hidden md:flex items-center gap-2">
-                        <Button variant="ghost" className="text-muted-foreground hover:text-foreground">Sign In</Button>
+                        <UserMenu />
                         <Button className="rounded-full shadow-lg shadow-primary/20">Submit Prompt</Button>
                     </div>
 
@@ -67,7 +68,9 @@ export function Navbar() {
                         <Link href="/popular" className="hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Popular</Link>
                     </div>
                     <div className="pt-4 border-t border-border flex flex-col gap-3">
-                        <Button variant="outline" className="w-full justify-center">Sign In</Button>
+                        <div className="flex justify-center">
+                            <UserMenu />
+                        </div>
                         <Button className="w-full justify-center shadow-lg shadow-primary/20">Submit Prompt</Button>
                     </div>
                 </div>
