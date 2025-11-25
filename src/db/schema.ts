@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, timestamp, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, text, integer, timestamp, primaryKey, boolean, uuid } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Categories table
@@ -70,6 +70,43 @@ export const promptTags = pgTable('prompt_tags', {
     pk: primaryKey({ columns: [table.promptId, table.tagId] }),
 }));
 
+// ===== AUTHENTICATION TABLES =====
+
+// Users table
+export const users = pgTable('users', {
+    id: serial('id').primaryKey(),
+    email: varchar('email', { length: 255 }).notNull().unique(),
+    name: varchar('name', { length: 255 }),
+    avatarUrl: text('avatar_url'),
+    isEmailVerified: boolean('is_email_verified').default(false).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+    lastLoginAt: timestamp('last_login_at'),
+});
+
+// Sessions table
+export const sessions = pgTable('sessions', {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    token: text('token').notNull().unique(),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    lastActivityAt: timestamp('last_activity_at').defaultNow().notNull(),
+    ipAddress: varchar('ip_address', { length: 45 }),
+    userAgent: text('user_agent'),
+});
+
+// Verification codes table
+export const verificationCodes = pgTable('verification_codes', {
+    id: serial('id').primaryKey(),
+    email: varchar('email', { length: 255 }).notNull(),
+    code: varchar('code', { length: 6 }).notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    attempts: integer('attempts').default(0).notNull(),
+    verified: boolean('verified').default(false).notNull(),
+});
+
 // Relations
 export const categoriesRelations = relations(categories, ({ many }) => ({
     promptCategories: many(promptCategories),
@@ -119,5 +156,17 @@ export const promptTagsRelations = relations(promptTags, ({ one }) => ({
     tag: one(tags, {
         fields: [promptTags.tagId],
         references: [tags.id],
+    }),
+}));
+
+// Authentication Relations
+export const usersRelations = relations(users, ({ many }) => ({
+    sessions: many(sessions),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+    user: one(users, {
+        fields: [sessions.userId],
+        references: [users.id],
     }),
 }));
