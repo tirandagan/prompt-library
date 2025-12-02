@@ -1,26 +1,30 @@
-import { openai } from "@ai-sdk/openai";
-import { anthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { generateObject, type LanguageModel } from "ai";
+import { generateObject, generateText, type LanguageModel } from "ai";
 import { z } from "zod";
 
-// Create a custom Google provider instance to use the specific env var
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
-
-// Validate API key presence for better error messages
-if (!process.env.GEMINI_API_KEY) {
-  console.warn("Warning: GEMINI_API_KEY is not set in environment variables.");
+// Helper to get model instance with optional custom key
+export function getModel(provider: string, apiKey?: string): LanguageModel {
+  switch (provider.toLowerCase()) {
+    case "openai":
+    case "chatgpt":
+      const openai = createOpenAI({ apiKey: apiKey || process.env.OPENAI_API_KEY });
+      return openai("gpt-4-turbo");
+    case "anthropic":
+    case "claude":
+      const anthropic = createAnthropic({ apiKey: apiKey || process.env.ANTHROPIC_API_KEY });
+      return anthropic("claude-3-5-sonnet-20240620");
+    case "google":
+    case "gemini":
+      const google = createGoogleGenerativeAI({ apiKey: apiKey || process.env.GEMINI_API_KEY });
+      return google("models/gemini-1.5-flash");
+    default:
+      throw new Error(`Unsupported provider: ${provider}`);
+  }
 }
 
 export type LLMProvider = "openai" | "claude" | "gemini";
-
-const models: Record<LLMProvider, LanguageModel> = {
-  openai: openai("gpt-4-turbo"),
-  claude: anthropic("claude-3-5-sonnet-20240620"),
-  gemini: google("models/gemini-2.5-flash"),
-};
 
 export const promptDetailsSchema = z.object({
   name: z.string().describe("A short, descriptive title for the prompt"),
@@ -37,11 +41,7 @@ export async function generatePromptDetails(
   promptText: string,
   provider: LLMProvider = "gemini"
 ) {
-  const model = models[provider];
-  
-  if (!model) {
-    throw new Error(`Invalid provider: ${provider}`);
-  }
+  const model = getModel(provider);
 
   const result = await generateObject({
     model,
@@ -63,3 +63,17 @@ export async function generatePromptDetails(
   return result.object;
 }
 
+export async function executePrompt(
+    promptText: string,
+    provider: string,
+    apiKey: string
+) {
+    const model = getModel(provider, apiKey);
+    
+    const result = await generateText({
+        model,
+        prompt: promptText,
+    });
+
+    return result.text;
+}

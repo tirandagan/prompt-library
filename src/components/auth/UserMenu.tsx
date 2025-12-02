@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
 import { LogOut, User as UserIcon, Settings, Shield } from "lucide-react";
@@ -70,10 +71,14 @@ export function UserMenu() {
                     </div>
 
                     <div className="py-1">
-                        <button className="w-full px-4 py-2 text-sm text-foreground hover:bg-secondary flex items-center gap-2 transition-colors">
+                        <Link 
+                            href="/profile"
+                            className="w-full px-4 py-2 text-sm text-foreground hover:bg-secondary flex items-center gap-2 transition-colors"
+                            onClick={() => setIsOpen(false)}
+                        >
                             <UserIcon className="w-4 h-4 text-muted-foreground" />
                             Profile
-                        </button>
+                        </Link>
                         <button className="w-full px-4 py-2 text-sm text-foreground hover:bg-secondary flex items-center gap-2 transition-colors">
                             <Settings className="w-4 h-4 text-muted-foreground" />
                             Settings

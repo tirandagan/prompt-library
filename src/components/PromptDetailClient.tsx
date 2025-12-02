@@ -3,13 +3,14 @@
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Prompt } from "@/lib/data";
-import { ArrowLeft, Copy, Eye, Heart, Share2, Terminal, Check, ExternalLink, Play, AlertCircle, ChevronDown, Pencil } from "lucide-react";
+import { ArrowLeft, Copy, Eye, Heart, Share2, Terminal, Check, ExternalLink, Play, AlertCircle, ChevronDown, Pencil, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { Toast, useToast } from "@/components/ui/Toast";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { Modal } from "@/components/ui/Modal";
 
 interface PromptDetailClientProps {
     prompt: Prompt;
@@ -18,25 +19,15 @@ interface PromptDetailClientProps {
 
 const TOOL_URLS: Record<string, (prompt: string) => string> = {
     "ChatGPT": (prompt) => `https://chatgpt.com/?q=${encodeURIComponent(prompt)}`,
-    "Claude": (prompt) => `https://claude.ai/new?q=${encodeURIComponent(prompt)}`, // Note: Claude support for this varies, often requires login first
+    "Claude": (prompt) => `https://claude.ai/new?q=${encodeURIComponent(prompt)}`,
     "Gemini": (prompt) => `https://gemini.google.com/app?text=${encodeURIComponent(prompt)}`,
-    "Midjourney": () => "https://discord.com/invite/midjourney", // No deep link for prompt text
+    "Midjourney": () => "https://discord.com/invite/midjourney",
     "Stable Diffusion": () => "https://stablediffusionweb.com/",
     "DALL-E": () => "https://labs.openai.com/",
 };
 
 export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClientProps) {
     const { user } = useAuth();
-    
-    useEffect(() => {
-        console.log('Admin Check:', {
-            serverSaysCanEdit: canEdit,
-            clientUser: user,
-            clientRole: user?.role,
-            isAdmin: canEdit || user?.role === 'admin' || (process.env.NODE_ENV === 'development' && user?.email === 'tiran@tirandagan.com')
-        });
-    }, [canEdit, user]);
-
     const { copy, copiedText } = useCopyToClipboard();
     const { toasts, showToast, removeToast } = useToast();
     const [isLiked, setIsLiked] = useState(!!prompt.isLiked);
@@ -44,6 +35,9 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
     const [selectedTool, setSelectedTool] = useState(prompt.tools[0] || "ChatGPT");
     const [isToolDropdownOpen, setIsToolDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [isExecuting, setIsExecuting] = useState(false);
+    const [executionResult, setExecutionResult] = useState<string | null>(null);
+    const [isResultModalOpen, setIsResultModalOpen] = useState(false);
 
     // Increment view count on mount
     useEffect(() => {
@@ -167,7 +161,7 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
         }
     };
 
-    const handleExecute = async () => {
+    const handleOpenInTool = async () => {
         if (parameters.length > 0 && !validateParams()) {
             showToast("Please fill in all parameters before running", "error");
             return;
@@ -186,6 +180,50 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
             : "https://www.google.com/search?q=" + encodeURIComponent(selectedTool + " AI");
             
         window.open(url, "_blank");
+    };
+
+    const handleExecuteInApp = async () => {
+        if (!user) {
+            showToast("Please log in to execute prompts in-app", "error");
+            return;
+        }
+
+        if (parameters.length > 0 && !validateParams()) {
+            showToast("Please fill in all parameters before running", "error");
+            return;
+        }
+
+        setIsExecuting(true);
+        setExecutionResult(null);
+
+        try {
+            const res = await fetch('/api/prompts/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    promptText: getFilledPrompt(),
+                    provider: selectedTool,
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                if (res.status === 404) {
+                    showToast(data.error || "Provider API key not found. Add it in your profile.", "error");
+                } else {
+                    showToast(data.error || "Execution failed", "error");
+                }
+                return;
+            }
+
+            setExecutionResult(data.result);
+            setIsResultModalOpen(true);
+        } catch (error) {
+            showToast("Failed to execute prompt", "error");
+        } finally {
+            setIsExecuting(false);
+        }
     };
 
     return (
@@ -281,16 +319,6 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
                                         <span className="flex-none flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-xs font-bold text-foreground">3</span>
                                         <span>Paste the prompt into the chat window.</span>
                                     </li>
-                                    {parameters.length === 0 && (
-                                        <li className="flex gap-3">
-                                            <span className="flex-none flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-xs font-bold text-foreground">4</span>
-                                            <span>Replace any placeholders like <code className="bg-secondary px-1.5 py-0.5 rounded text-foreground font-mono text-sm">[TOPIC]</code> with your specific content.</span>
-                                        </li>
-                                    )}
-                                    <li className="flex gap-3">
-                                        <span className="flex-none flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-xs font-bold text-foreground">{parameters.length > 0 ? "4" : "5"}</span>
-                                        <span>Send the message and iterate as needed.</span>
-                                    </li>
                                 </ol>
                             </div>
                         </div>
@@ -345,41 +373,64 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
                                 </div>
                             )}
                             
-                            <div className="flex gap-0 mb-6">
-                                <Button
-                                    className="flex-1 h-11 rounded-r-none border-r-0 focus:ring-0"
-                                    variant="default"
-                                    onClick={handleExecute}
-                                >
-                                    Run on {selectedTool}
-                                </Button>
-                                <div className="relative" ref={dropdownRef}>
+                            <div className="flex flex-col gap-2 mb-6">
+                                <div className="flex gap-0">
                                     <Button
-                                        className="h-11 px-3 rounded-l-none border-l border-primary-foreground/20"
+                                        className="flex-1 h-11 rounded-r-none border-r-0 focus:ring-0"
                                         variant="default"
-                                        onClick={() => setIsToolDropdownOpen(!isToolDropdownOpen)}
+                                        onClick={handleOpenInTool}
                                     >
-                                        <ChevronDown className="w-4 h-4" />
+                                        Open in {selectedTool}
                                     </Button>
+                                    <div className="relative" ref={dropdownRef}>
+                                        <Button
+                                            className="h-11 px-3 rounded-l-none border-l border-primary-foreground/20"
+                                            variant="default"
+                                            onClick={() => setIsToolDropdownOpen(!isToolDropdownOpen)}
+                                        >
+                                            <ChevronDown className="w-4 h-4" />
+                                        </Button>
 
-                                    {isToolDropdownOpen && (
-                                        <div className="absolute right-0 top-12 w-48 bg-popover border border-border rounded-lg shadow-lg z-50 py-1 animate-in fade-in zoom-in-95 duration-100">
-                                            {prompt.tools.map((tool) => (
-                                                <button
-                                                    key={tool}
-                                                    className="w-full text-left px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-between"
-                                                    onClick={() => {
-                                                        setSelectedTool(tool);
-                                                        setIsToolDropdownOpen(false);
-                                                    }}
-                                                >
-                                                    {tool}
-                                                    {selectedTool === tool && <Check className="w-3.5 h-3.5 text-primary" />}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
+                                        {isToolDropdownOpen && (
+                                            <div className="absolute right-0 top-12 w-48 bg-popover border border-border rounded-lg shadow-lg z-50 py-1 animate-in fade-in zoom-in-95 duration-100">
+                                                {prompt.tools.map((tool) => (
+                                                    <button
+                                                        key={tool}
+                                                        className="w-full text-left px-4 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-colors flex items-center justify-between"
+                                                        onClick={() => {
+                                                            setSelectedTool(tool);
+                                                            setIsToolDropdownOpen(false);
+                                                        }}
+                                                    >
+                                                        {tool}
+                                                        {selectedTool === tool && <Check className="w-3.5 h-3.5 text-primary" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
+
+                                {user && (
+                                    <Button
+                                        variant="secondary"
+                                        className="w-full h-11"
+                                        onClick={handleExecuteInApp}
+                                        disabled={isExecuting}
+                                    >
+                                        {isExecuting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                Running...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Play className="w-4 h-4 mr-2" />
+                                                Run in App
+                                            </>
+                                        )}
+                                    </Button>
+                                )}
                             </div>
 
                             <div className="h-px bg-border my-6" />
@@ -436,7 +487,7 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
                             </div>
                         </div>
 
-                        {/* Author Card (Moved below actions) */}
+                        {/* Author Card */}
                         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
@@ -469,6 +520,34 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
                     </div>
                 </div>
             </div>
+
+            <Modal
+                isOpen={isResultModalOpen}
+                onClose={() => setIsResultModalOpen(false)}
+                title="Execution Result"
+            >
+                <div className="p-6 space-y-4">
+                    <div className="p-4 bg-muted rounded-lg border border-border max-h-[60vh] overflow-y-auto whitespace-pre-wrap font-mono text-sm">
+                        {executionResult}
+                    </div>
+                    <div className="flex justify-end gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsResultModalOpen(false)}
+                        >
+                            Close
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                if (executionResult) copy(executionResult);
+                                showToast("Result copied!", "success");
+                            }}
+                        >
+                            Copy Result
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
 
             {/* Toast notifications */}
             {toasts.map((toast) => (
