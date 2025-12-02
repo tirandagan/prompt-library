@@ -1,6 +1,5 @@
 "use client";
 
-import { Navbar } from "@/components/Navbar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { MOCK_PROMPTS } from "@/lib/data";

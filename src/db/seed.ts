@@ -8,6 +8,17 @@ async function seed() {
     console.log('🌱 Seeding database...');
 
     try {
+        // Clear existing data
+        console.log('🧹 Clearing existing data...');
+        await db.delete(promptTags);
+        await db.delete(promptTools);
+        await db.delete(promptCategories);
+        await db.delete(prompts);
+        await db.delete(tags);
+        await db.delete(tools);
+        await db.delete(categories);
+        console.log('✅ Cleared existing data');
+
         // Seed categories
         console.log('📁 Seeding categories...');
         const categoriesData = await db.insert(categories).values([
@@ -82,6 +93,7 @@ Requirements:
                 author: 'Alex Chen',
                 likes: 342,
                 views: 1205,
+                isPublished: true,
             },
             {
                 slug: 'midjourney-photorealistic-portrait',
@@ -92,6 +104,7 @@ Requirements:
                 author: 'Sarah Jones',
                 likes: 890,
                 views: 5600,
+                isPublished: true,
             },
             {
                 slug: 'python-code-refactorer',
@@ -113,6 +126,7 @@ Code:
                 author: 'DevMike',
                 likes: 156,
                 views: 430,
+                isPublished: true,
             },
             {
                 slug: 'youtube-video-script-writer',
@@ -137,6 +151,7 @@ Tone: Energetic and engaging`,
                 author: 'CreatorPro',
                 likes: 210,
                 views: 890,
+                isPublished: true,
             },
             {
                 slug: 'react-component-builder',
@@ -163,6 +178,7 @@ Please provide:
                 author: 'ReactMaster',
                 likes: 445,
                 views: 1890,
+                isPublished: true,
             },
             {
                 slug: 'email-marketing-campaign',
@@ -188,6 +204,7 @@ Brand Voice: [BRAND_VOICE]`,
                 author: 'MarketingGuru',
                 likes: 298,
                 views: 1120,
+                isPublished: true,
             },
             {
                 slug: 'stable-diffusion-landscape',
@@ -198,6 +215,7 @@ Brand Voice: [BRAND_VOICE]`,
                 author: 'ArtistAI',
                 likes: 567,
                 views: 3240,
+                isPublished: true,
             },
             {
                 slug: 'meeting-notes-summarizer',
@@ -221,6 +239,7 @@ Format the output in a clear, scannable format suitable for sharing with stakeho
                 author: 'ProductivityPro',
                 likes: 389,
                 views: 1567,
+                isPublished: true,
             },
         ]).returning();
         console.log(`✅ Created ${promptsData.length} prompts`);

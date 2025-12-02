@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
-import { Plus, Pencil, Trash2, Link as LinkIcon, FileText, X, LayoutGrid, List, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Link as LinkIcon, FileText, X, LayoutGrid, List, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import Link from "next/link";
 import { PromptForm, PromptFormData } from "@/components/admin/PromptForm";
 import { cn } from "@/lib/utils";
@@ -39,10 +39,26 @@ export default function PromptsPage() {
         search: '',
         category: 'all',
     });
-    const [sort, setSort] = useState('newest');
+    const [sort, setSort] = useState('createdAt_desc');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
+
+    // ... (fetchData and other handlers remain same)
+
+    const handleSort = (field: string) => {
+        if (sort === `${field}_asc`) {
+            setSort(`${field}_desc`);
+        } else {
+            setSort(`${field}_asc`);
+        }
+    };
+
+    const SortIcon = ({ field }: { field: string }) => {
+        if (sort === `${field}_asc`) return <ArrowUp className="w-4 h-4 ml-1" />;
+        if (sort === `${field}_desc`) return <ArrowDown className="w-4 h-4 ml-1" />;
+        return <ArrowUpDown className="w-4 h-4 ml-1 opacity-50" />;
+    };
 
     const fetchData = useCallback(async () => {
         const includeUnpublished = filters.published === 'all' || filters.published === 'draft';
@@ -154,15 +170,28 @@ export default function PromptsPage() {
             return true;
         })
         .sort((a, b) => {
+            // Sort
             switch (sort) {
-                case 'newest':
+                case 'createdAt_desc':
+                case 'newest': // legacy support
                     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                case 'oldest':
+                case 'createdAt_asc':
+                case 'oldest': // legacy support
                     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-                case 'az':
+                case 'name_asc':
+                case 'az': // legacy support
                     return a.name.localeCompare(b.name);
-                case 'za':
+                case 'name_desc':
+                case 'za': // legacy support
                     return b.name.localeCompare(a.name);
+                case 'isPublished_asc':
+                    return Number(a.isPublished) - Number(b.isPublished);
+                case 'isPublished_desc':
+                    return Number(b.isPublished) - Number(a.isPublished);
+                case 'promptType_asc':
+                    return a.promptType.localeCompare(b.promptType);
+                case 'promptType_desc':
+                    return b.promptType.localeCompare(a.promptType);
                 default:
                     return 0;
             }
@@ -240,10 +269,14 @@ export default function PromptsPage() {
                         onChange={(e) => setSort(e.target.value)}
                         className="px-4 py-2 rounded-lg border border-border bg-background text-foreground text-sm"
                     >
-                        <option value="newest">Newest First</option>
-                        <option value="oldest">Oldest First</option>
-                        <option value="az">Name (A-Z)</option>
-                        <option value="za">Name (Z-A)</option>
+                        <option value="createdAt_desc">Newest First</option>
+                        <option value="createdAt_asc">Oldest First</option>
+                        <option value="name_asc">Name (A-Z)</option>
+                        <option value="name_desc">Name (Z-A)</option>
+                        <option value="isPublished_asc">Status (Draft First)</option>
+                        <option value="isPublished_desc">Status (Published First)</option>
+                        <option value="promptType_asc">Type (A-Z)</option>
+                        <option value="promptType_desc">Type (Z-A)</option>
                     </select>
                 </div>
 
@@ -347,11 +380,27 @@ export default function PromptsPage() {
                         <table className="w-full text-sm text-left">
                             <thead className="bg-secondary/50 text-muted-foreground border-b border-border">
                                 <tr>
-                                    <th className="px-6 py-3 font-medium">Name</th>
-                                    <th className="px-6 py-3 font-medium">Status</th>
-                                    <th className="px-6 py-3 font-medium">Type</th>
+                                    <th className="px-6 py-3 font-medium">
+                                        <button onClick={() => handleSort('name')} className="flex items-center hover:text-foreground transition-colors">
+                                            Name <SortIcon field="name" />
+                                        </button>
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        <button onClick={() => handleSort('isPublished')} className="flex items-center hover:text-foreground transition-colors">
+                                            Status <SortIcon field="isPublished" />
+                                        </button>
+                                    </th>
+                                    <th className="px-6 py-3 font-medium">
+                                        <button onClick={() => handleSort('promptType')} className="flex items-center hover:text-foreground transition-colors">
+                                            Type <SortIcon field="promptType" />
+                                        </button>
+                                    </th>
                                     <th className="px-6 py-3 font-medium">Categories</th>
-                                    <th className="px-6 py-3 font-medium">Created</th>
+                                    <th className="px-6 py-3 font-medium">
+                                        <button onClick={() => handleSort('createdAt')} className="flex items-center hover:text-foreground transition-colors">
+                                            Created <SortIcon field="createdAt" />
+                                        </button>
+                                    </th>
                                     <th className="px-6 py-3 font-medium text-right">Actions</th>
                                 </tr>
                             </thead>
