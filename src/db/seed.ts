@@ -251,6 +251,7 @@ Format the output in a clear, scannable format suitable for sharing with stakeho
         await db.insert(promptCategories).values([
             { promptId: promptsData[0].id, categoryId: categoriesData[0].id }, // Marketing
             { promptId: promptsData[0].id, categoryId: categoriesData[5].id }, // SEO
+            { promptId: promptsData[0].id, categoryId: categoriesData[2].id }, // Writing
         ]);
         await db.insert(promptTools).values([
             { promptId: promptsData[0].id, toolId: toolsData[0].id }, // ChatGPT
@@ -292,6 +293,7 @@ Format the output in a clear, scannable format suitable for sharing with stakeho
         // Prompt 4: YouTube Script
         await db.insert(promptCategories).values([
             { promptId: promptsData[3].id, categoryId: categoriesData[0].id }, // Marketing
+            { promptId: promptsData[3].id, categoryId: categoriesData[2].id }, // Writing
         ]);
         await db.insert(promptTools).values([
             { promptId: promptsData[3].id, toolId: toolsData[0].id }, // ChatGPT

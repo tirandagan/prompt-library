@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { useAuth } from "@/contexts/AuthContext";
 import { X, Mail, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
@@ -18,8 +19,13 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
     const [isLoading, setIsLoading] = useState(false);
     const { signIn, verifyCode } = useAuth();
     const { showToast } = useToast();
+    const [mounted, setMounted] = useState(false);
 
-    if (!isOpen) return null;
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!isOpen || !mounted) return null;
 
     const handleEmailSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -58,7 +64,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
         }
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
                 <button
@@ -166,6 +172,7 @@ export function SignInModal({ isOpen, onClose }: SignInModalProps) {
                     </p>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

@@ -89,6 +89,15 @@ export const promptRelationships = pgTable('prompt_relationships', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Prompt Likes table (Many-to-Many for Users <-> Prompts)
+export const promptLikes = pgTable('prompt_likes', {
+    userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    promptId: integer('prompt_id').notNull().references(() => prompts.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+    pk: primaryKey({ columns: [table.userId, table.promptId] }),
+}));
+
 // ===== AUTHENTICATION TABLES =====
 
 // Users table
@@ -97,11 +106,24 @@ export const users = pgTable('users', {
     email: varchar('email', { length: 255 }).notNull().unique(),
     name: varchar('name', { length: 255 }),
     avatarUrl: text('avatar_url'),
+    passwordHash: text('password_hash'),
+    bio: text('bio'),
     role: varchar('role', { length: 20 }).default('user').notNull(), // 'user' or 'admin'
     isEmailVerified: boolean('is_email_verified').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     lastLoginAt: timestamp('last_login_at'),
+});
+
+// API Keys table
+export const apiKeys = pgTable('api_keys', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    provider: varchar('provider', { length: 50 }).notNull(),
+    key: text('key').notNull(), // Encrypted
+    label: varchar('label', { length: 100 }),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Sessions table
@@ -146,6 +168,7 @@ export const promptsRelations = relations(prompts, ({ many }) => ({
     targetRelationships: many(promptRelationships, {
         relationName: 'targetPrompt'
     }),
+    promptLikes: many(promptLikes),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -198,9 +221,29 @@ export const promptRelationshipsRelations = relations(promptRelationships, ({ on
     }),
 }));
 
+export const promptLikesRelations = relations(promptLikes, ({ one }) => ({
+    user: one(users, {
+        fields: [promptLikes.userId],
+        references: [users.id],
+    }),
+    prompt: one(prompts, {
+        fields: [promptLikes.promptId],
+        references: [prompts.id],
+    }),
+}));
+
 // Authentication Relations
 export const usersRelations = relations(users, ({ many }) => ({
     sessions: many(sessions),
+    promptLikes: many(promptLikes),
+    apiKeys: many(apiKeys),
+}));
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+    user: one(users, {
+        fields: [apiKeys.userId],
+        references: [users.id],
+    }),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({

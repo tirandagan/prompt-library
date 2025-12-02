@@ -1,5 +1,5 @@
 import { db } from './index';
-import { categories, tools, prompts, tags, promptCategories, promptTools, promptTags } from './schema';
+import { categories, tools, prompts, tags, promptCategories, promptTools, promptTags, promptLikes } from './schema';
 import { eq, desc, sql, and, inArray } from 'drizzle-orm';
 
 // Categories
@@ -73,6 +73,26 @@ export async function getPromptWithRelations(slug: string) {
         tools: promptToolsList.map((pt) => pt.tool),
         tags: promptTagsList.map((pt) => pt.tag),
     };
+}
+
+
+// Get all published prompts with related data
+export async function getAllPromptsWithRelations() {
+    return await db.query.prompts.findMany({
+        where: eq(prompts.isPublished, true),
+        with: {
+            promptCategories: {
+                with: { category: true }
+            },
+            promptTools: {
+                with: { tool: true }
+            },
+            promptTags: {
+                with: { tag: true }
+            },
+        },
+        orderBy: (prompts, { desc }) => [desc(prompts.likes)],
+    });
 }
 
 // Get prompts by category
@@ -180,4 +200,17 @@ export async function getCategoriesWithCount() {
         .orderBy(categories.name);
 
     return result;
+}
+
+export async function getUserLikes(userId: number, promptIds: number[]) {
+    if (promptIds.length === 0) return [];
+    
+    const likes = await db.select({ promptId: promptLikes.promptId })
+        .from(promptLikes)
+        .where(and(
+            eq(promptLikes.userId, userId),
+            inArray(promptLikes.promptId, promptIds)
+        ));
+        
+    return likes.map(l => l.promptId);
 }

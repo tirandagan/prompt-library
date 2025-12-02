@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { Prompt } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Toast, useToast } from "@/components/ui/Toast";
 
 interface PromptCardProps {
     prompt: Prompt;
@@ -16,24 +18,67 @@ interface PromptCardProps {
 }
 
 export function PromptCard({ prompt, className, onCopy }: PromptCardProps) {
+    const { user } = useAuth();
     const { copy } = useCopyToClipboard();
+    const { toasts, showToast, removeToast } = useToast();
     const [isLiked, setIsLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(prompt.likes);
+
+    // Sync with prop if it changes (e.g. re-fetch)
+    useEffect(() => {
+        setIsLiked(!!prompt.isLiked);
+        setLikeCount(prompt.likes);
+    }, [prompt.isLiked, prompt.likes]);
 
     const handleCopy = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
         const success = await copy(prompt.text);
-        if (success && onCopy) {
-            onCopy(prompt.text);
+        if (success) {
+            showToast("Prompt copied to clipboard!", "success");
+            if (onCopy) {
+                onCopy(prompt.text);
+            }
         }
     };
 
-    const handleLike = (e: React.MouseEvent) => {
+    const handleLike = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        setIsLiked(!isLiked);
-        setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+
+        if (!user) {
+            showToast("Please log in to like prompts", "error");
+            return;
+        }
+
+        // Optimistic update
+        const previousLiked = isLiked;
+        const previousCount = likeCount;
+        
+        const newLiked = !isLiked;
+        setIsLiked(newLiked);
+        setLikeCount(newLiked ? likeCount + 1 : likeCount - 1);
+
+        try {
+            const res = await fetch(`/api/prompts/${prompt.id}/like`, {
+                method: 'POST'
+            });
+            
+            if (!res.ok) {
+                throw new Error('Failed to like');
+            }
+            
+            const data = await res.json();
+            // Sync with server truth
+            setIsLiked(data.liked);
+            setLikeCount(data.likes);
+            
+        } catch (error) {
+            // Revert
+            setIsLiked(previousLiked);
+            setLikeCount(previousCount);
+            showToast("Failed to update like", "error");
+        }
     };
 
     return (
@@ -100,6 +145,16 @@ export function PromptCard({ prompt, className, onCopy }: PromptCardProps) {
                     </Button>
                 </div>
             </div>
+
+            {/* Toast notifications */}
+            {toasts.map((toast) => (
+                <Toast
+                    key={toast.id}
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => removeToast(toast.id)}
+                />
+            ))}
         </div>
     );
 }

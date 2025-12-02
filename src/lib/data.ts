@@ -10,6 +10,7 @@ export type Prompt = {
     likes: number;
     views: number;
     tags: string[];
+    isLiked?: boolean;
 };
 
 export const CATEGORIES = [

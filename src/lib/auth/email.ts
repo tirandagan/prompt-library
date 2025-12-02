@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { nanoid } from 'nanoid';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
@@ -15,40 +16,42 @@ export async function sendVerificationEmail(email: string, code: string) {
     const data = await resend.emails.send({
       from: `${appName} <${fromEmail}>`,
       to: email,
-      subject: `Sign in to ${appName}`,
+      subject: `Your verification code for ${appName}`,
+      reply_to: process.env.SUPPORT_EMAIL || fromEmail,
+      headers: {
+        'X-Entity-Ref-ID': nanoid(),
+      },
+      tags: [
+        {
+          name: 'category',
+          value: 'verification',
+        },
+      ],
       text: `Sign in to ${appName}\n\nEnter the following code to complete your sign in:\n\n${code}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this code, you can safely ignore this email.`,
       html: `
         <!DOCTYPE html>
-        <html>
+        <html lang="en">
           <head>
             <meta charset="utf-8">
             <title>Sign in to ${appName}</title>
-            <style>
-              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #333; }
-              .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-              .header { text-align: center; margin-bottom: 30px; }
-              .logo { font-size: 24px; font-weight: bold; color: #4F46E5; text-decoration: none; }
-              .content { background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb; text-align: center; }
-              .code { font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #111827; background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 30px 0; display: inline-block; }
-              .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #6b7280; }
-              .expiry { color: #6b7280; font-size: 14px; margin-top: 20px; }
-            </style>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
           </head>
-          <body style="background-color: #f9fafb; margin: 0;">
-            <div class="container">
-              <div class="header">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}" class="logo">✨ ${appName}</a>
+          <body style="background-color: #f9fafb; margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #333;">
+            <!-- user verification code -->
+            <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}" style="font-size: 24px; font-weight: bold; color: #4F46E5; text-decoration: none;">✨ ${appName}</a>
               </div>
-              <div class="content">
-                <h1 style="margin-top: 0; font-size: 24px; color: #111827;">Sign in to your account</h1>
-                <p style="font-size: 16px; color: #4b5563;">Enter the following code to complete your sign in:</p>
+              <div style="background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb; text-align: center;">
+                <h1 style="margin-top: 0; font-size: 24px; color: #111827; margin-bottom: 16px;">Sign in to your account</h1>
+                <p style="font-size: 16px; color: #4b5563; margin-bottom: 24px;">Enter the following code to complete your sign in:</p>
                 
-                <div class="code">${code}</div>
+                <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #111827; background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 30px 0; display: inline-block;">${code}</div>
                 
-                <p class="expiry">This code will expire in 10 minutes.</p>
-                <p style="font-size: 14px; color: #6b7280;">If you didn't request this code, you can safely ignore this email.</p>
+                <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">This code will expire in 10 minutes.</p>
+                <p style="font-size: 14px; color: #6b7280; margin-bottom: 0;">If you didn't request this code, you can safely ignore this email.</p>
               </div>
-              <div class="footer">
+              <div style="text-align: center; margin-top: 30px; font-size: 12px; color: #6b7280;">
                 &copy; ${new Date().getFullYear()} ${appName}. All rights reserved.
               </div>
             </div>
