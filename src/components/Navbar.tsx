@@ -24,6 +24,10 @@ export function Navbar() {
                         <Link href="/categories" className="hover:text-primary transition-colors">Categories</Link>
                         <Link href="/tools" className="hover:text-primary transition-colors">Tools</Link>
                         <Link href="/popular" className="hover:text-primary transition-colors">Popular</Link>
+                        <Link href="/admin" className="hover:text-primary transition-colors flex items-center gap-1">
+                            <span className="text-xs">⚙️</span>
+                            Admin
+                        </Link>
                     </div>
                 </div>
 
@@ -66,6 +70,10 @@ export function Navbar() {
                         <Link href="/categories" className="hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Categories</Link>
                         <Link href="/tools" className="hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Tools</Link>
                         <Link href="/popular" className="hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Popular</Link>
+                        <Link href="/admin" className="hover:text-primary transition-colors flex items-center gap-1" onClick={() => setIsMenuOpen(false)}>
+                            <span className="text-xs">⚙️</span>
+                            Admin
+                        </Link>
                     </div>
                     <div className="pt-4 border-t border-border flex flex-col gap-3">
                         <div className="flex justify-center">

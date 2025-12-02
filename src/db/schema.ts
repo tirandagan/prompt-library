@@ -34,6 +34,11 @@ export const prompts = pgTable('prompts', {
     author: varchar('author', { length: 100 }).notNull(),
     likes: integer('likes').default(0).notNull(),
     views: integer('views').default(0).notNull(),
+    difficultyLevel: varchar('difficulty_level', { length: 20 }), // 'beginner', 'intermediate', 'advanced'
+    useCase: text('use_case'), // Specific use case description
+    industry: varchar('industry', { length: 100 }), // Target industry (optional)
+    isPublished: boolean('is_published').default(false).notNull(), // Draft vs published
+    publishedAt: timestamp('published_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -69,6 +74,17 @@ export const promptTags = pgTable('prompt_tags', {
 }, (table) => ({
     pk: primaryKey({ columns: [table.promptId, table.tagId] }),
 }));
+
+// Prompt relationships table (self-referential for related prompts)
+export const promptRelationships = pgTable('prompt_relationships', {
+    id: serial('id').primaryKey(),
+    sourcePromptId: integer('source_prompt_id').notNull().references(() => prompts.id, { onDelete: 'cascade' }),
+    targetPromptId: integer('target_prompt_id').notNull().references(() => prompts.id, { onDelete: 'cascade' }),
+    relationshipType: varchar('relationship_type', { length: 50 }).notNull(), 
+    // Types: 'variation', 'inspired_by', 'follow_up', 'alternative', 'prerequisite'
+    description: text('description'), // Optional description of the relationship
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
 
 // ===== AUTHENTICATION TABLES =====
 
@@ -121,6 +137,12 @@ export const promptsRelations = relations(prompts, ({ many }) => ({
     promptCategories: many(promptCategories),
     promptTools: many(promptTools),
     promptTags: many(promptTags),
+    sourceRelationships: many(promptRelationships, {
+        relationName: 'sourcePrompt'
+    }),
+    targetRelationships: many(promptRelationships, {
+        relationName: 'targetPrompt'
+    }),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -157,6 +179,19 @@ export const promptTagsRelations = relations(promptTags, ({ one }) => ({
     tag: one(tags, {
         fields: [promptTags.tagId],
         references: [tags.id],
+    }),
+}));
+
+export const promptRelationshipsRelations = relations(promptRelationships, ({ one }) => ({
+    sourcePrompt: one(prompts, {
+        fields: [promptRelationships.sourcePromptId],
+        references: [prompts.id],
+        relationName: 'sourcePrompt',
+    }),
+    targetPrompt: one(prompts, {
+        fields: [promptRelationships.targetPromptId],
+        references: [prompts.id],
+        relationName: 'targetPrompt',
     }),
 }));
 

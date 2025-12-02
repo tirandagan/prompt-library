@@ -1,0 +1,50 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { PromptForm, PromptFormData } from "@/components/admin/PromptForm";
+
+export default function NewPromptPage() {
+    const router = useRouter();
+
+    const handleSubmit = async (data: PromptFormData) => {
+        try {
+            const res = await fetch('/api/admin/prompts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ...data,
+                    publishedAt: data.isPublished ? new Date() : null,
+                }),
+            });
+
+            if (res.ok) {
+                router.push('/admin/prompts');
+            } else {
+                const error = await res.json();
+                alert('Error creating prompt: ' + error.error);
+            }
+        } catch (error) {
+            console.error('Error submitting prompt:', error);
+            alert('Failed to create prompt');
+        }
+    };
+
+    return (
+        <div className="p-8 max-w-4xl">
+            <Link href="/admin/prompts" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Prompts
+            </Link>
+
+            <h1 className="text-4xl font-bold mb-8">Create New Prompt</h1>
+
+            <PromptForm 
+                onSubmit={handleSubmit}
+                onCancel={() => router.push('/admin/prompts')}
+                submitLabel="Create Prompt"
+            />
+        </div>
+    );
+}

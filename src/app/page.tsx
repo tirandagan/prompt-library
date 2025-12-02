@@ -4,13 +4,32 @@ import { Navbar } from "@/components/Navbar";
 import { PromptCard } from "@/components/PromptCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { CATEGORIES, MOCK_PROMPTS } from "@/lib/data";
+import { MOCK_PROMPTS } from "@/lib/data";
 import { ArrowRight, Sparkles, Search, Zap, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Toast, useToast } from "@/components/ui/Toast";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const { toasts, showToast, removeToast } = useToast();
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/categories');
+      const data = await res.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCopy = () => {
     showToast("Prompt copied to clipboard!", "success");
@@ -78,20 +97,24 @@ export default function Home() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
-          {CATEGORIES.map((category) => (
-            <Link
-              key={category.id}
-              href={`/category/${category.id}`}
-              className="group flex flex-col items-center justify-center p-8 bg-card rounded-2xl border border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all text-center relative overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <span className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 filter drop-shadow-sm">{category.icon}</span>
-              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{category.name}</h3>
-              <span className="text-xs text-muted-foreground mt-1 font-medium">{category.count} prompts</span>
-            </Link>
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center text-muted-foreground py-12">Loading categories...</div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 md:gap-6">
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                href={`/category/${category.slug}`}
+                className="group flex flex-col items-center justify-center p-8 bg-card rounded-2xl border border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all text-center relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 filter drop-shadow-sm">{category.icon}</span>
+                <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{category.name}</h3>
+                <span className="text-xs text-muted-foreground mt-1 font-medium">{category.count} prompts</span>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Featured Prompts Section */}

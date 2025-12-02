@@ -5,18 +5,19 @@ const fromEmail = process.env.FROM_EMAIL || 'onboarding@resend.dev';
 const appName = process.env.NEXT_PUBLIC_APP_NAME || 'PromptForge';
 
 export async function sendVerificationEmail(email: string, code: string) {
-    if (!process.env.RESEND_API_KEY) {
-        console.warn('RESEND_API_KEY is not set. Skipping email sending.');
-        console.log(`[DEV MODE] Verification code for ${email}: ${code}`);
-        return { success: true, devMode: true };
-    }
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('RESEND_API_KEY is not set. Skipping email sending.');
+    console.log(`[DEV MODE] Verification code for ${email}: ${code}`);
+    return { success: true, devMode: true };
+  }
 
-    try {
-        const data = await resend.emails.send({
-            from: `${appName} <${fromEmail}>`,
-            to: email,
-            subject: `Sign in to ${appName}`,
-            html: `
+  try {
+    const data = await resend.emails.send({
+      from: `${appName} <${fromEmail}>`,
+      to: email,
+      subject: `Sign in to ${appName}`,
+      text: `Sign in to ${appName}\n\nEnter the following code to complete your sign in:\n\n${code}\n\nThis code will expire in 10 minutes.\n\nIf you didn't request this code, you can safely ignore this email.`,
+      html: `
         <!DOCTYPE html>
         <html>
           <head>
@@ -54,11 +55,11 @@ export async function sendVerificationEmail(email: string, code: string) {
           </body>
         </html>
       `,
-        });
+    });
 
-        return { success: true, data };
-    } catch (error) {
-        console.error('Error sending email:', error);
-        return { success: false, error };
-    }
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error sending email:', error);
+    return { success: false, error };
+  }
 }
