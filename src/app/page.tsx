@@ -12,10 +12,12 @@ import { useState, useEffect } from "react";
 export default function Home() {
   const { toasts, showToast, removeToast } = useToast();
   const [categories, setCategories] = useState<any[]>([]);
+  const [featuredPrompts, setFeaturedPrompts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchCategories();
+    fetchFeaturedPrompts();
   }, []);
 
   const fetchCategories = async () => {
@@ -25,6 +27,18 @@ export default function Home() {
       setCategories(data);
     } catch (error) {
       console.error('Error fetching categories:', error);
+    }
+  };
+
+  const fetchFeaturedPrompts = async () => {
+    try {
+      const res = await fetch('/api/prompts/featured');
+      const data = await res.json();
+      setFeaturedPrompts(data);
+    } catch (error) {
+      console.error('Error fetching featured prompts:', error);
+      // Fallback to mock if fetch fails (or just empty)
+      setFeaturedPrompts(MOCK_PROMPTS);
     } finally {
       setLoading(false);
     }
@@ -134,7 +148,7 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {MOCK_PROMPTS.map((prompt) => (
+            {featuredPrompts.map((prompt) => (
               <PromptCard key={prompt.id} prompt={prompt} onCopy={handleCopy} />
             ))}
           </div>
