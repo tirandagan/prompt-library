@@ -1,12 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { PromptForm, PromptFormData } from "@/components/admin/PromptForm";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 
 export default function NewPromptPage() {
     const router = useRouter();
+    const [errorModalOpen, setErrorModalOpen] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     const handleSubmit = async (data: PromptFormData) => {
         try {
@@ -23,11 +28,13 @@ export default function NewPromptPage() {
                 router.push('/admin/prompts');
             } else {
                 const error = await res.json();
-                alert('Error creating prompt: ' + error.error);
+                setErrorMessage(error.error || 'Failed to create prompt');
+                setErrorModalOpen(true);
             }
         } catch (error) {
             console.error('Error submitting prompt:', error);
-            alert('Failed to create prompt');
+            setErrorMessage('Failed to create prompt. Please try again.');
+            setErrorModalOpen(true);
         }
     };
 
@@ -45,6 +52,21 @@ export default function NewPromptPage() {
                 onCancel={() => router.push('/admin/prompts')}
                 submitLabel="Create Prompt"
             />
+
+            <Modal
+                isOpen={errorModalOpen}
+                onClose={() => setErrorModalOpen(false)}
+                title="Error Creating Prompt"
+            >
+                <div className="space-y-4">
+                    <p className="text-muted-foreground">{errorMessage}</p>
+                    <div className="flex justify-end">
+                        <Button onClick={() => setErrorModalOpen(false)}>
+                            Close
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

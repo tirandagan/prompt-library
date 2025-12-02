@@ -50,8 +50,16 @@ export async function PATCH(
     try {
         const { id } = await params;
         const body = await request.json();
+        console.log('PATCH prompt body:', body);
         const { categories: categoryIds, tools: toolIds, tags: tagIds, ...promptData } = body;
         
+        // Ensure publishedAt is a Date object if it exists and is a string
+        if (promptData.publishedAt && typeof promptData.publishedAt === 'string') {
+            promptData.publishedAt = new Date(promptData.publishedAt);
+        }
+
+        console.log('Updating prompt with data:', promptData);
+
         // Update prompt
         const [updatedPrompt] = await db.update(prompts)
             .set({ ...promptData, updatedAt: new Date() })

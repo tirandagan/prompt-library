@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/contexts/AuthContext";
+import { Navbar } from "@/components/Navbar";
 
 // ... (keep existing imports)
 
@@ -23,6 +24,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={cn(inter.className, "min-h-screen bg-slate-50 text-slate-900 antialiased")}>
         <AuthProvider>
+          <Navbar />
           {children}
         </AuthProvider>
       </body>

@@ -44,6 +44,7 @@ export async function POST(request: Request) {
         // Insert prompt
         const [newPrompt] = await db.insert(prompts).values({
             ...promptData,
+            publishedAt: promptData.publishedAt ? new Date(promptData.publishedAt) : null,
             createdAt: new Date(),
             updatedAt: new Date(),
         }).returning();

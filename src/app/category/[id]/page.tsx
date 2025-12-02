@@ -1,6 +1,5 @@
 "use client";
 
-import { Navbar } from "@/components/Navbar";
 import { PromptCard } from "@/components/PromptCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -67,7 +66,6 @@ export default function CategoryPage({ params }: PageProps) {
 
     return (
         <main className="min-h-screen bg-background">
-            <Navbar />
 
             <div className="container mx-auto px-4 py-8 md:py-12">
                 <Link

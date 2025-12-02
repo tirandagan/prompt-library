@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, timestamp, primaryKey, boolean, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, text, integer, timestamp, primaryKey, boolean, uuid, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Categories table
@@ -41,7 +41,9 @@ export const prompts = pgTable('prompts', {
     publishedAt: timestamp('published_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    isPublishedIdx: index('prompts_is_published_idx').on(table.isPublished),
+}));
 
 // Tags table
 export const tags = pgTable('tags', {
@@ -57,6 +59,7 @@ export const promptCategories = pgTable('prompt_categories', {
     categoryId: integer('category_id').notNull().references(() => categories.id, { onDelete: 'cascade' }),
 }, (table) => ({
     pk: primaryKey({ columns: [table.promptId, table.categoryId] }),
+    categoryIdIdx: index('prompt_categories_category_id_idx').on(table.categoryId),
 }));
 
 // Junction table: prompts <-> tools (many-to-many)

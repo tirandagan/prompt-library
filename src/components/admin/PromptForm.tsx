@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Wand2, Check, X, Loader2 } from "lucide-react";
+import { Toast, useToast } from "@/components/ui/Toast";
 
 export interface PromptFormData {
     name: string;
@@ -65,6 +66,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
     const [loading, setLoading] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [pendingSuggestions, setPendingSuggestions] = useState<Partial<PromptFormData> | null>(null);
+    const { toasts, showToast, removeToast } = useToast();
 
     useEffect(() => {
         fetchResources();
@@ -136,7 +138,10 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
                 body: JSON.stringify({ promptText: formData.promptText }),
             });
             
-            if (!res.ok) throw new Error('Failed to generate details');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to generate details');
+            }
             
             const data = await res.json();
             
@@ -189,7 +194,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
 
         } catch (error) {
             console.error('Error auto-populating:', error);
-            // You might want to show a toast here
+            showToast(error instanceof Error ? error.message : 'Failed to generate details', 'error');
         } finally {
             setGenerating(false);
         }
@@ -519,6 +524,15 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
                     Cancel
                 </Button>
             </div>
+
+            {toasts.map((toast) => (
+                <Toast
+                    key={toast.id}
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => removeToast(toast.id)}
+                />
+            ))}
         </form>
     );
 }

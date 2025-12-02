@@ -1,6 +1,5 @@
 "use client";
 
-import { Navbar } from "@/components/Navbar";
 import { PromptCard } from "@/components/PromptCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -37,7 +36,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-background selection:bg-primary/20 selection:text-primary">
-      <Navbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden border-b border-border bg-background pt-16 pb-24 md:pt-24 md:pb-32">
