@@ -35,7 +35,8 @@ async function generateEmbeddingsForExistingPrompts() {
       console.log(`Processing prompt: ${prompt.name} (ID: ${prompt.id})`);
 
       try {
-        const embeddingText = `${prompt.name}\n${prompt.description}\n${prompt.promptText}`;
+        // Only include name and description, exclude promptText to reduce noise
+        const embeddingText = `${prompt.name}\n${prompt.description}`;
         const embedding = await generateEmbedding(embeddingText);
 
         await db

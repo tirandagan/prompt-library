@@ -54,13 +54,13 @@ export async function PATCH(
         const { categories: categoryIds, tools: toolIds, tags: tagIds, ...promptData } = body;
         
         let embedding = undefined;
-        if (promptData.name || promptData.description || promptData.promptText) {
+        if (promptData.name || promptData.description) {
             const existing = await db.query.prompts.findFirst({ where: eq(prompts.id, parseInt(id)) });
             if (existing) {
                 const name = promptData.name || existing.name;
                 const description = promptData.description || existing.description;
-                const text = promptData.promptText || existing.promptText;
-                const embeddingText = `${name}\n${description}\n${text}`;
+                // Exclude prompt text from embedding
+                const embeddingText = `${name}\n${description}`;
                 embedding = await generateEmbedding(embeddingText);
             }
         }

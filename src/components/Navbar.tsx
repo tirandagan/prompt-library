@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Menu, X, Sparkles } from "lucide-react";
+import { Search, Menu, X, Sparkles, LayoutDashboard, FolderKanban, FileText, Tags, Plus, ChevronDown, Settings } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -12,11 +12,14 @@ import { useToast } from "@/components/ui/Toast";
 
 export function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
+    const adminMenuRef = useRef<HTMLDivElement>(null);
+    const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -24,17 +27,20 @@ export function Navbar() {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
                 setShowResults(false);
             }
+            if (adminMenuRef.current && !adminMenuRef.current.contains(event.target as Node)) {
+                setIsAdminMenuOpen(false);
+            }
         };
 
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleSearch = async (query: string) => {
-        setSearchQuery(query);
+    const performSearch = async (query: string) => {
         if (!query.trim()) {
             setSearchResults([]);
             setShowResults(false);
+            setIsSearching(false);
             return;
         }
 
@@ -51,9 +57,31 @@ export function Navbar() {
         }
     };
 
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+        
+        if (debounceTimeout.current) {
+            clearTimeout(debounceTimeout.current);
+        }
+
+        if (!query.trim()) {
+            setSearchResults([]);
+            setShowResults(false);
+            return;
+        }
+
+        setIsSearching(true); // Show loading state immediately while waiting for debounce
+        debounceTimeout.current = setTimeout(() => {
+            performSearch(query);
+        }, 500);
+    };
+
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
-            handleSearch(searchQuery);
+            if (debounceTimeout.current) {
+                clearTimeout(debounceTimeout.current);
+            }
+            performSearch(searchQuery);
         }
     };
 
@@ -68,13 +96,82 @@ export function Navbar() {
                         <span className="text-xl font-bold tracking-tight text-foreground">PromptForge</span>
                     </Link>
                     <div className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-                        <Link href="/categories" className="hover:text-primary transition-colors">Categories</Link>
+                        <Link href="/categories" className="hover:text-primary transition-colors">Browse</Link>
                         <Link href="/tools" className="hover:text-primary transition-colors">Tools</Link>
                         <Link href="/popular" className="hover:text-primary transition-colors">Popular</Link>
-                        <Link href="/admin" className="hover:text-primary transition-colors flex items-center gap-1">
-                            <span className="text-xs">⚙️</span>
-                            Admin
-                        </Link>
+                        
+                        <div className="relative" ref={adminMenuRef}>
+                            <button 
+                                onClick={() => setIsAdminMenuOpen(!isAdminMenuOpen)}
+                                className={`flex items-center gap-1 hover:text-primary transition-colors ${isAdminMenuOpen ? 'text-primary' : ''}`}
+                            >
+                                <span className="text-xs">⚙️</span>
+                                Admin
+                                <ChevronDown className={`h-3 w-3 ml-0.5 transition-transform ${isAdminMenuOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {isAdminMenuOpen && (
+                                <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50 py-1 animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="px-3 py-2 border-b border-border bg-secondary/30">
+                                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Admin Panel</p>
+                                    </div>
+                                    
+                                    <div className="py-1">
+                                        <Link 
+                                            href="/admin" 
+                                            className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                                            onClick={() => setIsAdminMenuOpen(false)}
+                                        >
+                                            <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                                            Dashboard
+                                        </Link>
+                                        <Link 
+                                            href="/admin/categories" 
+                                            className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                                            onClick={() => setIsAdminMenuOpen(false)}
+                                        >
+                                            <FolderKanban className="h-4 w-4 text-muted-foreground" />
+                                            Categories
+                                        </Link>
+                                        <Link 
+                                            href="/admin/tools" 
+                                            className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                                            onClick={() => setIsAdminMenuOpen(false)}
+                                        >
+                                            <Settings className="h-4 w-4 text-muted-foreground" />
+                                            Tools
+                                        </Link>
+                                        <Link 
+                                            href="/admin/prompts" 
+                                            className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                                            onClick={() => setIsAdminMenuOpen(false)}
+                                        >
+                                            <FileText className="h-4 w-4 text-muted-foreground" />
+                                            Prompts
+                                        </Link>
+                                        <Link 
+                                            href="/admin/tags" 
+                                            className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
+                                            onClick={() => setIsAdminMenuOpen(false)}
+                                        >
+                                            <Tags className="h-4 w-4 text-muted-foreground" />
+                                            Tags
+                                        </Link>
+                                    </div>
+
+                                    <div className="border-t border-border py-1">
+                                        <Link 
+                                            href="/admin/prompts/new" 
+                                            className="flex items-center gap-2 px-4 py-2 text-sm text-primary font-medium hover:bg-primary/10 transition-colors"
+                                            onClick={() => setIsAdminMenuOpen(false)}
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                            Add Prompt
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -143,7 +240,7 @@ export function Navbar() {
                         />
                     </div>
                     <div className="flex flex-col gap-4 text-base font-medium text-muted-foreground">
-                        <Link href="/categories" className="hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Categories</Link>
+                        <Link href="/categories" className="hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Browse</Link>
                         <Link href="/tools" className="hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Tools</Link>
                         <Link href="/popular" className="hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Popular</Link>
                         <Link href="/admin" className="hover:text-primary transition-colors flex items-center gap-1" onClick={() => setIsMenuOpen(false)}>

@@ -42,8 +42,8 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { categories: categoryIds, tools: toolIds, tags: tagIds, ...promptData } = body;
         
-        // Generate embedding
-        const embeddingText = `${promptData.name}\n${promptData.description}\n${promptData.promptText}`;
+        // Generate embedding (Name + Description only)
+        const embeddingText = `${promptData.name}\n${promptData.description}`;
         const embedding = await generateEmbedding(embeddingText);
 
         // Insert prompt

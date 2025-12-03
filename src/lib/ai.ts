@@ -18,7 +18,7 @@ export function getModel(provider: string, apiKey?: string): LanguageModel {
     case "google":
     case "gemini":
       const google = createGoogleGenerativeAI({ apiKey: apiKey || process.env.GEMINI_API_KEY });
-      return google("models/gemini-1.5-flash");
+      return google("models/gemini-2.5-flash");
     default:
       throw new Error(`Unsupported provider: ${provider}`);
   }

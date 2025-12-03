@@ -80,6 +80,16 @@ export function CategoriesPageClient({ prompts: initialPrompts, categories, tool
         return result;
     }, [initialPrompts, searchQuery, selectedCategory, selectedTools, sortBy]);
 
+    const promptsByCategory = useMemo(() => {
+        const groups: Record<string, Prompt[]> = {};
+        filteredPrompts.forEach((p) => {
+            const cat = p.category;
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(p);
+        });
+        return groups;
+    }, [filteredPrompts]);
+
     const handleCopy = () => {
         showToast("Prompt copied to clipboard!", "success");
     };
@@ -352,16 +362,73 @@ export function CategoriesPageClient({ prompts: initialPrompts, categories, tool
                                 </Button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {filteredPrompts.map((prompt) => (
-                                    <PromptCard 
-                                        key={prompt.id} 
-                                        prompt={prompt} 
-                                        onCopy={handleCopy}
-                                        className="h-full"
-                                    />
-                                ))}
-                            </div>
+                            selectedCategory ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                    {filteredPrompts.map((prompt) => (
+                                        <PromptCard 
+                                            key={prompt.id} 
+                                            prompt={prompt} 
+                                            onCopy={handleCopy}
+                                            className="h-full"
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="space-y-16">
+                                    {categories.map((category) => {
+                                        const categoryPrompts = promptsByCategory[category.name];
+                                        if (!categoryPrompts?.length) return null;
+
+                                        return (
+                                            <div key={category.id} className="space-y-6">
+                                                <div className="flex items-center gap-3 border-b border-border/50 pb-4">
+                                                    <span className="text-2xl select-none">{category.icon}</span>
+                                                    <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                                                        {category.name}
+                                                    </h2>
+                                                    <Badge variant="secondary" className="ml-2 font-normal">
+                                                        {categoryPrompts.length} {categoryPrompts.length === 1 ? 'prompt' : 'prompts'}
+                                                    </Badge>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                                    {categoryPrompts.map((prompt) => (
+                                                        <PromptCard 
+                                                            key={prompt.id} 
+                                                            prompt={prompt} 
+                                                            onCopy={handleCopy}
+                                                            className="h-full"
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    
+                                    {promptsByCategory["Uncategorized"]?.length > 0 && (
+                                        <div className="space-y-6">
+                                            <div className="flex items-center gap-3 border-b border-border/50 pb-4">
+                                                <span className="text-2xl select-none">📂</span>
+                                                <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                                                    Uncategorized
+                                                </h2>
+                                                <Badge variant="secondary" className="ml-2 font-normal">
+                                                    {promptsByCategory["Uncategorized"].length} {promptsByCategory["Uncategorized"].length === 1 ? 'prompt' : 'prompts'}
+                                                </Badge>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                                {promptsByCategory["Uncategorized"].map((prompt) => (
+                                                    <PromptCard 
+                                                        key={prompt.id} 
+                                                        prompt={prompt} 
+                                                        onCopy={handleCopy}
+                                                        className="h-full"
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )
                         )}
                         
                         {filteredPrompts.length > 0 && (

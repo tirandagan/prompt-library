@@ -24,27 +24,39 @@ export default async function PromptDetailPage({ params }: PageProps) {
         isAdmin: user?.role === 'admin'
     });
 
-    // Fetch prompt with relations
-    const promptData = await db.query.prompts.findFirst({
-        where: eq(prompts.id, parseInt(id)),
+    // Try to find prompt by slug first, then by ID
+    let promptData = await db.query.prompts.findFirst({
+        where: eq(prompts.slug, id),
         with: {
             promptTools: {
-                with: {
-                    tool: true,
-                }
+                with: { tool: true }
             },
             promptTags: {
-                with: {
-                    tag: true,
-                }
+                with: { tag: true }
             },
             promptCategories: {
-                with: {
-                    category: true,
-                }
+                with: { category: true }
             }
         }
     });
+
+    // If not found by slug, try ID (if it's a number)
+    if (!promptData && !isNaN(parseInt(id))) {
+        promptData = await db.query.prompts.findFirst({
+            where: eq(prompts.id, parseInt(id)),
+            with: {
+                promptTools: {
+                    with: { tool: true }
+                },
+                promptTags: {
+                    with: { tag: true }
+                },
+                promptCategories: {
+                    with: { category: true }
+                }
+            }
+        });
+    }
 
     if (!promptData) {
         notFound();

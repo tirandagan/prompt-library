@@ -99,6 +99,16 @@ export const promptLikes = pgTable('prompt_likes', {
     pk: primaryKey({ columns: [table.userId, table.promptId] }),
 }));
 
+// Prompt Images table (One-to-Many for Prompts -> Images)
+export const promptImages = pgTable('prompt_images', {
+    id: serial('id').primaryKey(),
+    promptId: integer('prompt_id').notNull().references(() => prompts.id, { onDelete: 'cascade' }),
+    url: text('url').notNull(),
+    altText: text('alt_text'),
+    position: integer('position').default(0).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // ===== AUTHENTICATION TABLES =====
 
 // Users table
@@ -170,6 +180,7 @@ export const promptsRelations = relations(prompts, ({ many }) => ({
         relationName: 'targetPrompt'
     }),
     promptLikes: many(promptLikes),
+    promptImages: many(promptImages),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -229,6 +240,13 @@ export const promptLikesRelations = relations(promptLikes, ({ one }) => ({
     }),
     prompt: one(prompts, {
         fields: [promptLikes.promptId],
+        references: [prompts.id],
+    }),
+}));
+
+export const promptImagesRelations = relations(promptImages, ({ one }) => ({
+    prompt: one(prompts, {
+        fields: [promptImages.promptId],
         references: [prompts.id],
     }),
 }));
