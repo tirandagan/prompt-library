@@ -60,6 +60,8 @@ export default async function PromptDetailPage({ params }: PageProps) {
         id: promptData.id.toString(),
         name: promptData.name,
         description: promptData.description,
+        whatItDoes: promptData.whatItDoes || undefined,
+        tips: promptData.tips || undefined,
         text: promptData.promptText,
         category: promptData.promptCategories[0]?.category.name || "Uncategorized", // Use first category for badge
         tools: promptData.promptTools.map(pt => pt.tool.name),
@@ -68,10 +70,13 @@ export default async function PromptDetailPage({ params }: PageProps) {
         likes: promptData.likes,
         views: promptData.views,
         tags: promptData.promptTags.map(pt => pt.tag.name),
+        useCase: promptData.useCase || undefined,
+        industry: promptData.industry || undefined,
+        difficultyLevel: promptData.difficultyLevel || undefined,
     };
 
     if (user) {
-        const likedIds = await getUserLikes(user.id, [parseInt(id)]);
+        const likedIds = await getUserLikes(user.id, [promptData.id]);
         if (likedIds.length > 0) {
             mappedPrompt.isLiked = true;
         }

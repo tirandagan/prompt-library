@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Wand2, Check, X, Loader2 } from "lucide-react";
 import { Toast, useToast } from "@/components/ui/Toast";
+import { TagInput, Tag } from "./TagInput";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface PromptFormData {
     name: string;
@@ -29,11 +31,6 @@ interface Category {
 }
 
 interface Tool {
-    id: number;
-    name: string;
-}
-
-interface Tag {
     id: number;
     name: string;
 }
@@ -72,10 +69,18 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
     const [generating, setGenerating] = useState(false);
     const [pendingSuggestions, setPendingSuggestions] = useState<Partial<PromptFormData> | null>(null);
     const { toasts, showToast, removeToast } = useToast();
+    const { user } = useAuth();
 
     useEffect(() => {
         fetchResources();
     }, []);
+
+    // Set default author for new prompts
+    useEffect(() => {
+        if (!initialData && user?.name && !formData.author) {
+            setFormData(prev => ({ ...prev, author: user.name || '' }));
+        }
+    }, [user?.name, initialData]);
 
     // Update form data if initialData changes (e.g. when opening modal with different prompt)
     useEffect(() => {
@@ -132,6 +137,32 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
         }));
     };
 
+    const createTag = async (name: string): Promise<Tag | null> => {
+        try {
+            const res = await fetch('/api/admin/tags', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name }),
+            });
+            
+            if (!res.ok) throw new Error('Failed to create tag');
+            
+            const newTag = await res.json();
+            
+            // Add to local state if not already present
+            setTags(prev => {
+                if (prev.some(t => t.id === newTag.id)) return prev;
+                return [...prev, newTag];
+            });
+            
+            return newTag;
+        } catch (error) {
+            console.error('Error creating tag:', error);
+            showToast('Failed to create tag', 'error');
+            return null;
+        }
+    };
+
     const handleAutoPopulate = async () => {
         if (!formData.promptText) return;
         
@@ -150,12 +181,39 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
             
             const data = await res.json();
             
-            // Map string tags to IDs if possible, or handle them separately
-            // For now, we'll focus on text fields and mapped enums
-            
             const suggestions: Partial<PromptFormData> = {};
             const conflicts: Partial<PromptFormData> = {};
             
+            // Process tags if available
+            if (data.tags && Array.isArray(data.tags) && data.tags.length > 0) {
+                const newTagIds: number[] = [];
+                
+                for (const tagName of data.tags) {
+                    // Check if tag exists (case insensitive)
+                    const existingTag = tags.find(t => t.name.toLowerCase() === tagName.toLowerCase());
+                    
+                    if (existingTag) {
+                        if (!newTagIds.includes(existingTag.id)) {
+                            newTagIds.push(existingTag.id);
+                        }
+                    } else {
+                        // Create new tag
+                        const newTag = await createTag(tagName);
+                        if (newTag && !newTagIds.includes(newTag.id)) {
+                            newTagIds.push(newTag.id);
+                        }
+                    }
+                }
+                
+                // Add existing selected tags
+                const uniqueTagIds = Array.from(new Set([...formData.tags, ...newTagIds]));
+                
+                if (uniqueTagIds.length > formData.tags.length) {
+                    // We have new tags to add
+                    suggestions['tags'] = uniqueTagIds;
+                }
+            }
+
             // Helper to check if field should be updated
             const checkField = (key: keyof PromptFormData, value: unknown) => {
                 if (!value) return;
@@ -187,7 +245,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
             checkField('industry', data.industry);
             checkField('difficultyLevel', data.difficultyLevel);
             checkField('promptType', data.promptType);
-            checkField('author', 'AI Generated'); // Optional suggestion
+            // checkField('author', 'AI Generated'); // specific requirement: keep logged in user as author
 
             // Apply non-conflicting changes immediately
             if (Object.keys(suggestions).length > 0) {
@@ -264,7 +322,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
                                                 className="bg-primary text-primary-foreground"
                                             >
                                                 <Check className="w-4 h-4 mr-1" />
-                                                Accept AI
+                                                Accept
                                             </Button>
                                         </div>
                                     </div>
@@ -278,7 +336,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
                                         </div>
                                         <div className="space-y-1">
                                             <span className="text-xs text-muted-foreground uppercase tracking-wider text-primary">Suggested</span>
-                                            <div className="p-2 bg-primary/10 rounded border border-primary/20 text-primary-foreground">
+                                            <div className="p-2 bg-primary/10 rounded border border-primary/20 text-foreground">
                                                 {String(value)}
                                             </div>
                                         </div>
@@ -506,26 +564,12 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
             {/* Tags */}
             <div className="bg-card rounded-xl border border-border p-6">
                 <h2 className="text-xl font-semibold mb-4">Tags</h2>
-                <div className="flex flex-wrap gap-2">
-                    {tags.map((tag) => (
-                        <label
-                            key={tag.id}
-                            className={`px-3 py-2 rounded-lg cursor-pointer transition-colors ${
-                                formData.tags.includes(tag.id)
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-secondary border border-border hover:bg-secondary/80'
-                            }`}
-                        >
-                            <input
-                                type="checkbox"
-                                checked={formData.tags.includes(tag.id)}
-                                onChange={() => toggleSelection('tags', tag.id)}
-                                className="hidden"
-                            />
-                            <span className="text-sm">{tag.name}</span>
-                        </label>
-                    ))}
-                </div>
+                <TagInput
+                    selectedTagIds={formData.tags}
+                    availableTags={tags}
+                    onTagsChange={(newTags) => setFormData(prev => ({ ...prev, tags: newTags }))}
+                    onCreateTag={createTag}
+                />
             </div>
 
             {/* Publishing */}

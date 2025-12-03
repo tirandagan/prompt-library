@@ -3,7 +3,7 @@
 import { db } from '@/db';
 import { prompts } from '@/db/schema';
 import { generateEmbedding } from '@/lib/ai';
-import { cosineDistance, desc, gt, sql } from 'drizzle-orm';
+import { cosineDistance, desc, gt, sql, isNotNull } from 'drizzle-orm';
 
 export type SearchResult = {
   id: number;
@@ -31,7 +31,7 @@ export async function searchPrompts(query: string): Promise<SearchResult[]> {
         similarity,
       })
       .from(prompts)
-      //.where(gt(similarity, 0.60)) // Temporarily remove threshold to see what's coming back
+      .where(isNotNull(prompts.embedding))
       .orderBy(desc(similarity))
       .limit(10);
 

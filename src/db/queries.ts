@@ -1,5 +1,5 @@
 import { db } from './index';
-import { categories, tools, prompts, tags, promptCategories, promptTools, promptTags, promptLikes } from './schema';
+import { categories, tools, prompts, tags, promptCategories, promptTools, promptTags, promptLikes, userLists, listPrompts } from './schema';
 import { eq, desc, sql, and, inArray } from 'drizzle-orm';
 
 // Categories
@@ -213,4 +213,66 @@ export async function getUserLikes(userId: number, promptIds: number[]) {
         ));
         
     return likes.map(l => l.promptId);
+}
+
+// User Lists Queries
+
+export async function getUserLists(userId: number) {
+    return await db.query.userLists.findMany({
+        where: eq(userLists.userId, userId),
+        orderBy: desc(userLists.createdAt),
+        with: {
+            listPrompts: true // Get count efficiently if needed later
+        }
+    });
+}
+
+export async function createUserList(userId: number, name: string, isPrivate = true, description?: string) {
+    const [list] = await db.insert(userLists)
+        .values({
+            userId,
+            name,
+            isPrivate,
+            description
+        })
+        .returning();
+    return list;
+}
+
+export async function addPromptToList(listId: number, promptId: number) {
+    // Check if list exists and belongs to user is handled in API
+    await db.insert(listPrompts)
+        .values({
+            listId,
+            promptId
+        })
+        .onConflictDoNothing(); // Ignore if already exists
+}
+
+export async function removePromptFromList(listId: number, promptId: number) {
+    await db.delete(listPrompts)
+        .where(and(
+            eq(listPrompts.listId, listId),
+            eq(listPrompts.promptId, promptId)
+        ));
+}
+
+export async function getListsWithPromptStatus(userId: number, promptId: number) {
+    const lists = await getUserLists(userId);
+    
+    // Check which lists contain the prompt
+    const containingListIds = await db.select({ listId: listPrompts.listId })
+        .from(listPrompts)
+        .where(and(
+            inArray(listPrompts.listId, lists.map(l => l.id)),
+            eq(listPrompts.promptId, promptId)
+        ));
+        
+    const containingSet = new Set(containingListIds.map(x => x.listId));
+    
+    return lists.map(list => ({
+        ...list,
+        hasPrompt: containingSet.has(list.id),
+        count: list.listPrompts.length
+    }));
 }

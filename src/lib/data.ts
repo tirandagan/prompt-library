@@ -2,6 +2,8 @@ export type Prompt = {
     id: string;
     name: string;
     description: string;
+    whatItDoes?: string;
+    tips?: string;
     text: string;
     category: string;
     tools: string[];
@@ -11,6 +13,9 @@ export type Prompt = {
     views: number;
     tags: string[];
     isLiked?: boolean;
+    useCase?: string;
+    industry?: string;
+    difficultyLevel?: string;
 };
 
 export const CATEGORIES = [
@@ -53,6 +58,9 @@ Requirements:
         likes: 342,
         views: 1205,
         tags: ["SEO", "Blogging", "Content Marketing"],
+        useCase: "Content Creation",
+        industry: "Marketing",
+        difficultyLevel: "Intermediate"
     },
     {
         id: "2",
@@ -66,6 +74,9 @@ Requirements:
         likes: 890,
         views: 5600,
         tags: ["Photography", "Portrait", "Realism"],
+        useCase: "Art & Design",
+        industry: "Creative",
+        difficultyLevel: "Advanced"
     },
     {
         id: "3",
@@ -90,6 +101,9 @@ Code:
         likes: 156,
         views: 430,
         tags: ["Python", "Refactoring", "Clean Code"],
+        useCase: "Software Development",
+        industry: "Technology",
+        difficultyLevel: "Intermediate"
     },
     {
         id: "4",
@@ -117,6 +131,9 @@ Tone: Energetic and engaging`,
         likes: 210,
         views: 890,
         tags: ["YouTube", "Video", "Script"],
+        useCase: "Video Production",
+        industry: "Media",
+        difficultyLevel: "Beginner"
     },
     {
         id: "5",
@@ -146,6 +163,9 @@ Please provide:
         likes: 445,
         views: 1890,
         tags: ["React", "TypeScript", "Components"],
+        useCase: "Web Development",
+        industry: "Technology",
+        difficultyLevel: "Advanced"
     },
     {
         id: "6",
@@ -174,6 +194,9 @@ Brand Voice: [BRAND_VOICE]`,
         likes: 298,
         views: 1120,
         tags: ["Email", "Marketing", "Campaigns"],
+        useCase: "Marketing Automation",
+        industry: "Marketing",
+        difficultyLevel: "Intermediate"
     },
     {
         id: "7",
@@ -187,6 +210,9 @@ Brand Voice: [BRAND_VOICE]`,
         likes: 567,
         views: 3240,
         tags: ["Landscape", "Nature", "Photography"],
+        useCase: "Digital Art",
+        industry: "Creative",
+        difficultyLevel: "Beginner"
     },
     {
         id: "8",
@@ -213,5 +239,8 @@ Format the output in a clear, scannable format suitable for sharing with stakeho
         likes: 389,
         views: 1567,
         tags: ["Meetings", "Productivity", "Summaries"],
+        useCase: "Business Administration",
+        industry: "Business",
+        difficultyLevel: "Intermediate"
     },
 ];

@@ -15,7 +15,7 @@ dotenv.config({ path: '.env.local' });
 import { db } from '../src/db';
 import { prompts } from '../src/db/schema';
 import { generateEmbedding } from '../src/lib/ai';
-import { desc, gt, sql } from 'drizzle-orm';
+import { desc, gt, sql, isNotNull } from 'drizzle-orm';
 
 async function testSearch(query: string) {
   console.log(`🔎 Testing search for: "${query}"`);
@@ -31,6 +31,7 @@ async function testSearch(query: string) {
         similarity,
       })
       .from(prompts)
+      .where(isNotNull(prompts.embedding))
       .orderBy(desc(similarity))
       .limit(5);
 
@@ -45,5 +46,5 @@ async function testSearch(query: string) {
 }
 
 // Run test
-testSearch("blog posts");
+testSearch("youtube");
 

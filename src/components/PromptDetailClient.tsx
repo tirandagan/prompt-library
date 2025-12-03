@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Prompt } from "@/lib/data";
-import { ArrowLeft, Copy, Eye, Heart, Share2, Terminal, Check, ExternalLink, Play, AlertCircle, ChevronDown, Pencil, Loader2 } from "lucide-react";
+import { ArrowLeft, Copy, Eye, Heart, Share2, Terminal, Check, ExternalLink, Play, AlertCircle, ChevronDown, Pencil, Loader2, Briefcase, Layers, BarChart } from "lucide-react";
 import Link from "next/link";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { Toast, useToast } from "@/components/ui/Toast";
@@ -265,6 +265,43 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
                             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 tracking-tight">{prompt.name}</h1>
                             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">{prompt.description}</p>
 
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                                {prompt.difficultyLevel && (
+                                    <div className="flex items-center gap-2 p-3 bg-secondary/30 rounded-lg border border-border/50">
+                                        <BarChart className="w-4 h-4 text-muted-foreground" />
+                                        <div>
+                                            <p className="text-xs text-muted-foreground uppercase tracking-wider">Difficulty</p>
+                                            <p className="text-sm font-medium capitalize">{prompt.difficultyLevel}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {prompt.useCase && (
+                                    <div className="flex items-center gap-2 p-3 bg-secondary/30 rounded-lg border border-border/50">
+                                        <Briefcase className="w-4 h-4 text-muted-foreground" />
+                                        <div>
+                                            <p className="text-xs text-muted-foreground uppercase tracking-wider">Use Case</p>
+                                            <p className="text-sm font-medium">{prompt.useCase}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {prompt.industry && (
+                                    <div className="flex items-center gap-2 p-3 bg-secondary/30 rounded-lg border border-border/50">
+                                        <Layers className="w-4 h-4 text-muted-foreground" />
+                                        <div>
+                                            <p className="text-xs text-muted-foreground uppercase tracking-wider">Industry</p>
+                                            <p className="text-sm font-medium">{prompt.industry}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {prompt.whatItDoes && (
+                                <div className="mb-8 p-4 bg-secondary/30 rounded-xl border border-border/50">
+                                    <h3 className="text-sm font-bold text-foreground uppercase tracking-wider mb-2">What It Does</h3>
+                                    <p className="text-muted-foreground">{prompt.whatItDoes}</p>
+                                </div>
+                            )}
+
                             <div className="relative group rounded-xl overflow-hidden border border-border shadow-sm">
                                 <div className="absolute top-0 right-0 p-3 flex gap-2 z-10">
                                     <Button
@@ -290,6 +327,30 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
                                     <pre className="font-mono text-sm text-zinc-100 whitespace-pre-wrap leading-relaxed">
                                         {prompt.text}
                                     </pre>
+                                </div>
+                            </div>
+
+                            {prompt.tips && (
+                                <div className="mt-8 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                                    <h3 className="text-sm font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                                        <AlertCircle className="w-4 h-4" />
+                                        Pro Tips
+                                    </h3>
+                                    <p className="text-muted-foreground">{prompt.tips}</p>
+                                </div>
+                            )}
+
+                            <div className="mt-8 pt-6 border-t border-border">
+                                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">Tags</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {prompt.tags.map((tag) => (
+                                        <Badge key={tag} variant="secondary" className="bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer px-3 py-1">
+                                            #{tag}
+                                        </Badge>
+                                    ))}
+                                    {prompt.tags.length === 0 && (
+                                        <p className="text-sm text-muted-foreground italic">No tags</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -472,17 +533,6 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
                                         <Share2 className="w-4 h-4 mr-2" />
                                         Share
                                     </Button>
-                                </div>
-                            </div>
-
-                            <div className="mt-8 pt-6 border-t border-border">
-                                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">Tags</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {prompt.tags.map((tag) => (
-                                        <Badge key={tag} variant="secondary" className="bg-secondary text-secondary-foreground hover:bg-secondary/80 cursor-pointer px-3 py-1">
-                                            #{tag}
-                                        </Badge>
-                                    ))}
                                 </div>
                             </div>
                         </div>
