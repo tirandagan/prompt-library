@@ -9,6 +9,8 @@ export interface PromptFormData {
     name: string;
     slug: string;
     description: string;
+    whatItDoes: string;
+    tips: string;
     promptText: string;
     promptType: string;
     author: string;
@@ -41,13 +43,16 @@ interface PromptFormProps {
     onSubmit: (data: PromptFormData) => Promise<void>;
     onCancel: () => void;
     submitLabel?: string;
+    showStatusToggle?: boolean;
 }
 
-export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Save" }: PromptFormProps) {
+export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Save", showStatusToggle = true }: PromptFormProps) {
     const [formData, setFormData] = useState<PromptFormData>(initialData || {
         name: '',
         slug: '',
         description: '',
+        whatItDoes: '',
+        tips: '',
         promptText: '',
         promptType: 'Generator',
         author: '',
@@ -176,6 +181,8 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
             checkField('name', data.name);
             checkField('slug', data.slug);
             checkField('description', data.description);
+            checkField('whatItDoes', data.whatItDoes);
+            checkField('tips', data.tips);
             checkField('useCase', data.useCase);
             checkField('industry', data.industry);
             checkField('difficultyLevel', data.difficultyLevel);
@@ -340,6 +347,28 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
                     </div>
 
                     <div>
+                        <label className="block text-sm font-medium mb-2">What this prompt does</label>
+                        <textarea
+                            value={formData.whatItDoes}
+                            onChange={(e) => setFormData({ ...formData, whatItDoes: e.target.value })}
+                            className="w-full px-4 py-2 rounded-lg border border-border bg-background"
+                            rows={3}
+                            placeholder="Detailed explanation of what the prompt achieves..."
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-2">Tips</label>
+                        <textarea
+                            value={formData.tips}
+                            onChange={(e) => setFormData({ ...formData, tips: e.target.value })}
+                            className="w-full px-4 py-2 rounded-lg border border-border bg-background"
+                            rows={3}
+                            placeholder="Tips for using this prompt effectively..."
+                        />
+                    </div>
+
+                    <div>
                         <div className="flex items-center justify-between mb-2">
                             <label className="block text-sm font-medium">Prompt Text *</label>
                             <Button
@@ -500,20 +529,22 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
             </div>
 
             {/* Publishing */}
-            <div className="bg-card rounded-xl border border-border p-6">
-                <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                        type="checkbox"
-                        checked={formData.isPublished}
-                        onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-                        className="w-5 h-5 rounded"
-                    />
-                    <div>
-                        <p className="font-medium">Publish immediately</p>
-                        <p className="text-sm text-muted-foreground">Make this prompt visible to users right away</p>
-                    </div>
-                </label>
-            </div>
+            {showStatusToggle && (
+                <div className="bg-card rounded-xl border border-border p-6">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={formData.isPublished}
+                            onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
+                            className="w-5 h-5 rounded"
+                        />
+                        <div>
+                            <p className="font-medium">Publish immediately</p>
+                            <p className="text-sm text-muted-foreground">Make this prompt visible to users right away</p>
+                        </div>
+                    </label>
+                </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-4">

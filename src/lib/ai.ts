@@ -34,6 +34,8 @@ export const promptDetailsSchema = z.object({
   industry: z.string().describe("The target industry (e.g., Marketing, Tech)"),
   difficultyLevel: z.enum(["beginner", "intermediate", "advanced"]).describe("The difficulty level of using the prompt"),
   promptType: z.enum(["Generator", "Direct", "Refiner"]).describe("The type of prompt"),
+  whatItDoes: z.string().describe("A detailed explanation of what the prompt achieves"),
+  tips: z.string().describe("Actionable tips for getting the best results with this prompt"),
   tags: z.array(z.string()).describe("List of 3-5 relevant keywords"),
 });
 
@@ -52,11 +54,13 @@ export async function generatePromptDetails(
     1. Name: concise and descriptive.
     2. Slug: kebab-case, lowercase.
     3. Description: 1-2 sentences summarizing the purpose.
-    4. Use Case: specific application.
-    5. Industry: general sector.
-    6. Difficulty: estimate based on complexity (beginner/intermediate/advanced).
-    7. Type: infer if it generates content (Generator), gives direct answers (Direct), or refines input (Refiner).
-    8. Tags: 3-5 relevant keywords.`,
+    4. What It Does: A more detailed explanation (2-3 sentences) of the prompt's functionality and output.
+    5. Tips: 2-3 actionable tips for users (e.g., "Be specific about X", "Try changing Y").
+    6. Use Case: specific application.
+    7. Industry: general sector.
+    8. Difficulty: estimate based on complexity (beginner/intermediate/advanced).
+    9. Type: infer if it generates content (Generator), gives direct answers (Direct), or refines input (Refiner).
+    10. Tags: 3-5 relevant keywords.`,
     prompt: `Prompt Text:\n${promptText}`,
   });
 

@@ -216,7 +216,9 @@ export function Navbar() {
 
                     <div className="hidden md:flex items-center gap-2">
                         <UserMenu />
-                        <Button className="rounded-full shadow-lg shadow-primary/20">Submit Prompt</Button>
+                        <Link href="/submit">
+                            <Button className="rounded-full shadow-lg shadow-primary/20">Submit Prompt</Button>
+                        </Link>
                     </div>
 
                     <button
@@ -252,7 +254,9 @@ export function Navbar() {
                         <div className="flex justify-center">
                             <UserMenu />
                         </div>
-                        <Button className="w-full justify-center shadow-lg shadow-primary/20">Submit Prompt</Button>
+                        <Link href="/submit" onClick={() => setIsMenuOpen(false)}>
+                            <Button className="w-full justify-center shadow-lg shadow-primary/20">Submit Prompt</Button>
+                        </Link>
                     </div>
                 </div>
             )}

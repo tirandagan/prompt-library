@@ -26,8 +26,6 @@ export async function getCurrentUser() {
         // Force refresh role from database to ensure it's up to date
         // The session query already joins with user table so we get the latest role
         
-        console.log('Session User Role (Server):', sessionData.user.role);
-
         return sessionData.user;
     } catch (error) {
         console.error('Get current user error:', error);

@@ -1175,7 +1175,135 @@ Directory: **\home\tiran\prompt_library** (1 file)
 I'm now zeroing in on the `UserMenu` component in `src/components/auth/UserMenu.tsx`. My current focus is the conditional rendering based on the user's role. Specifically, I'm examining how the admin role is being handled to pinpoint where to introduce the new tools into the admin dropdown.
 
 
+**Pinpointing Menu Insertion**
+
+I've located the `UserMenu` component within `Navbar.tsx` and confirmed its integration. Now, I'm analyzing the existing admin role check in `UserMenu.tsx` (lines 65-70) to identify the precise insertion point. My next step will be to integrate the tools within the admin dropdown, likely by adding new links or buttons within the existing structure.
+
+
+**Inspecting Navbar Component**
+
+I'm now fully reviewing `src/components/Navbar.tsx` to understand the desktop navigation structure. My initial observations suggest the existence of an `isAdminMenuOpen` state, hinting at a dedicated admin dropdown. My focus is on locating the rendering logic for this admin menu and identifying the points for my menu additions.
+
+
 </details></think>
+
+---
+
+<tool-use data-tool-type="read" data-tool-name="read_file">
+<details><summary>Tool use: **read_file** • Read file: src/components/Navbar.tsx</summary>
+
+</details>
+</tool-use>
+
+---
+
+<think><details><summary>Thought Process</summary>
+**Examining Navbar Functionality**
+
+I've located the "Admin" dropdown within the `Navbar.tsx` file, specifically lines 103-166. My immediate task involves integrating a "Tools" link into this dropdown, mirroring the structure of existing options like Categories and Prompts. I'm also considering the potential use of an icon for visual clarity.
+
+
+**Considering Tools Menu Link**
+
+I'm now zeroing in on the "Tools" link insertion. The "Admin" dropdown resides in `Navbar.tsx`, lines 103-166. My plan is to add the "Tools" link, mirroring the existing structure, after Categories or Prompts, aiming for consistency. The key decision is the icon:  I'd used `Settings` for "Tools" in the sidebar but `Wrench` is a contender, though `Settings` is needed, so I'll try that. I now need to add an import statement for `Settings`.
+
+
+**Incorporating Settings Icon**
+
+I'm now implementing the "Tools" link and icon. Based on previous sidebar work in `src/app/admin/layout.tsx`, and the need for consistency, I'll use the `Settings` icon. I've confirmed that `Settings` isn't currently imported in `Navbar.tsx`, so I'll add the import statement. After that, I will add the Tools link to the admin dropdown menu in `Navbar.tsx`.
+
+
+</details></think>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: src/components/Navbar.tsx</summary>
+
+**Chunk 1**
+Lines added: 1, lines removed: 1
+
+```diff
+@@ -2,5 +2,5 @@
+  
+  import Link from "next/link";
+- import { Search, Menu, X, Sparkles, LayoutDashboard, FolderKanban, FileText, Tags, Plus, ChevronDown } from "lucide-react";
++ import { Search, Menu, X, Sparkles, LayoutDashboard, FolderKanban, FileText, Tags, Plus, ChevronDown, Settings } from "lucide-react";
+  import { useState, useRef, useEffect } from "react";
+  import { Button } from "@/components/ui/Button";
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="write" data-tool-name="search_replace">
+
+<details><summary>Tool use: **search_replace** • Edit file: src/components/Navbar.tsx</summary>
+
+**Chunk 1**
+Lines added: 8, lines removed: undefined
+
+```diff
+@@ -134,4 +134,12 @@
+                                              Categories
+                                          &lt;/Link&gt;
++                                         &lt;Link 
++                                             href="/admin/tools" 
++                                             className="flex items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
++                                             onClick={() =&gt; setIsAdminMenuOpen(false)}
++                                         &gt;
++                                             &lt;Settings className="h-4 w-4 text-muted-foreground" /&gt;
++                                             Tools
++                                         &lt;/Link&gt;
+                                          &lt;Link 
+                                              href="/admin/prompts" 
+```
+
+</details>
+
+</tool-use>
+
+---
+
+<tool-use data-tool-type="task" data-tool-name="todo_write">
+<details><summary>Tool use: **todo_write** • Todo List</summary>
+
+- [x] Locate the admin dropdown menu component
+- [x] Add "Tools" link to the admin dropdown menu
+
+</details>
+</tool-use>
+
+---
+
+<tool-use data-tool-type="generic" data-tool-name="read_lints">
+<details>
+          <summary>Tool use: **read_lints** • Read lints for 1 file</summary>
+      
+Lint paths:
+
+- `src/components/Navbar.tsx`
+
+Lint results
+
+
+**No lint errors found**
+</details>
+</tool-use>
+
+---
+
+I have added the **Tools** link to the admin dropdown menu in the top navigation bar.
+
+### Changes Implemented:
+*   **Component**: Updated `src/components/Navbar.tsx`.
+*   **Action**: Imported the `Settings` icon and inserted a new `Link` pointing to `/admin/tools` within the admin dropdown, consistent with the "Categories" and "Prompts" links.
+
+Now, when you open the Admin dropdown in the navbar, you will see a "Tools" option that takes you directly to the tool management page.
 
 ---
 

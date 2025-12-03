@@ -4,7 +4,7 @@ import { PromptCard } from "@/components/PromptCard";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { MOCK_PROMPTS } from "@/lib/data";
-import { ArrowRight, Sparkles, Search, Zap, TrendingUp } from "lucide-react";
+import { ArrowRight, Sparkles, Zap } from "lucide-react";
 import Link from "next/link";
 import { Toast, useToast } from "@/components/ui/Toast";
 import { useState, useEffect } from "react";
@@ -70,34 +70,6 @@ export default function Home() {
           <p className="mx-auto max-w-2xl text-lg text-muted-foreground mb-12 animate-in fade-in slide-in-from-bottom-6 duration-500 delay-200 leading-relaxed">
             PromptForge is the ultimate library for developers, marketers, and creatives to find, test, and deploy high-quality LLM prompts for ChatGPT, Midjourney, and more.
           </p>
-
-          <div className="mx-auto max-w-2xl relative mb-12 animate-in fade-in slide-in-from-bottom-7 duration-500 delay-300">
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-full opacity-25 group-hover:opacity-50 blur transition duration-200" />
-              <div className="relative flex items-center bg-background rounded-full p-2 shadow-xl border border-border">
-                <Search className="ml-4 h-5 w-5 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search for 'SEO Blog Post' or 'Python Refactoring'..."
-                  className="w-full h-10 px-4 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
-                  readOnly
-                />
-                <Button 
-                  size="lg" 
-                  className="rounded-full px-8 shadow-lg shadow-primary/25"
-                >
-                  Search
-                </Button>
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3" /> Trending:</span>
-              <Link href="#" className="hover:text-primary transition-colors hover:underline underline-offset-4">Marketing Strategy</Link>
-              <Link href="#" className="hover:text-primary transition-colors hover:underline underline-offset-4">React Components</Link>
-              <Link href="#" className="hover:text-primary transition-colors hover:underline underline-offset-4">Midjourney v6</Link>
-            </div>
-          </div>
         </div>
       </section>
 

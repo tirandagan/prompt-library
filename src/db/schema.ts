@@ -35,6 +35,8 @@ export const prompts = pgTable('prompts', {
     likes: integer('likes').default(0).notNull(),
     views: integer('views').default(0).notNull(),
     difficultyLevel: varchar('difficulty_level', { length: 20 }), // 'beginner', 'intermediate', 'advanced'
+    whatItDoes: text('what_it_does'), // Detailed description of functionality
+    tips: text('tips'), // Tips for using the prompt
     useCase: text('use_case'), // Specific use case description
     industry: varchar('industry', { length: 100 }), // Target industry (optional)
     isPublished: boolean('is_published').default(false).notNull(), // Draft vs published
@@ -109,6 +111,28 @@ export const promptImages = pgTable('prompt_images', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// ===== USER LISTS TABLES =====
+
+// User Lists table
+export const userLists = pgTable('user_lists', {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 255 }).notNull(),
+    description: text('description'),
+    isPrivate: boolean('is_private').default(true).notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// List Prompts junction table
+export const listPrompts = pgTable('list_prompts', {
+    listId: integer('list_id').notNull().references(() => userLists.id, { onDelete: 'cascade' }),
+    promptId: integer('prompt_id').notNull().references(() => prompts.id, { onDelete: 'cascade' }),
+    addedAt: timestamp('added_at').defaultNow().notNull(),
+}, (table) => ({
+    pk: primaryKey({ columns: [table.listId, table.promptId] }),
+}));
+
 // ===== AUTHENTICATION TABLES =====
 
 // Users table
@@ -181,6 +205,7 @@ export const promptsRelations = relations(prompts, ({ many }) => ({
     }),
     promptLikes: many(promptLikes),
     promptImages: many(promptImages),
+    listPrompts: many(listPrompts),
 }));
 
 export const tagsRelations = relations(tags, ({ many }) => ({
@@ -251,11 +276,31 @@ export const promptImagesRelations = relations(promptImages, ({ one }) => ({
     }),
 }));
 
+export const userListsRelations = relations(userLists, ({ one, many }) => ({
+    user: one(users, {
+        fields: [userLists.userId],
+        references: [users.id],
+    }),
+    listPrompts: many(listPrompts),
+}));
+
+export const listPromptsRelations = relations(listPrompts, ({ one }) => ({
+    list: one(userLists, {
+        fields: [listPrompts.listId],
+        references: [userLists.id],
+    }),
+    prompt: one(prompts, {
+        fields: [listPrompts.promptId],
+        references: [prompts.id],
+    }),
+}));
+
 // Authentication Relations
 export const usersRelations = relations(users, ({ many }) => ({
     sessions: many(sessions),
     promptLikes: many(promptLikes),
     apiKeys: many(apiKeys),
+    userLists: many(userLists),
 }));
 
 export const apiKeysRelations = relations(apiKeys, ({ one }) => ({

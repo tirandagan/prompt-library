@@ -18,6 +18,8 @@ interface Prompt {
     id: number;
     name: string;
     description: string;
+    whatItDoes?: string;
+    tips?: string;
     promptText: string;
     slug: string;
     promptType: string;
@@ -63,6 +65,8 @@ export default function EditPromptPage({ params }: { params: Promise<{ id: strin
         name: prompt.name,
         slug: prompt.slug,
         description: prompt.description,
+        whatItDoes: prompt.whatItDoes || '',
+        tips: prompt.tips || '',
         promptText: prompt.promptText,
         promptType: prompt.promptType,
         author: prompt.author,

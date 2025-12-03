@@ -17,13 +17,6 @@ export default async function PromptDetailPage({ params }: PageProps) {
     const { id } = await params;
     const user = await getCurrentUser();
     
-    console.log('PromptDetailPage Debug:', {
-        promptId: id,
-        userId: user?.id,
-        userRole: user?.role,
-        isAdmin: user?.role === 'admin'
-    });
-
     // Try to find prompt by slug first, then by ID
     let promptData = await db.query.prompts.findFirst({
         where: eq(prompts.slug, id),
