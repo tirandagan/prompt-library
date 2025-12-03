@@ -1,4 +1,5 @@
 import { db } from "@/db";
+import { getCurrentUser } from "@/lib/auth/session";
 import { categories, prompts, promptCategories, tools } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
