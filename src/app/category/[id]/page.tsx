@@ -1,5 +1,6 @@
 import { db } from "@/db";
 import { getCurrentUser } from "@/lib/auth/session";
+import { getUserLikes } from "@/db/queries";
 import { categories, prompts, promptCategories, tools } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
@@ -30,7 +31,6 @@ export default async function CategoryPage({ params }: PageProps) {
         where: eq(promptCategories.categoryId, category.id),
         with: {
             prompt: {
-                where: eq(prompts.isPublished, true),
                 with: {
                     promptTools: {
                         with: {
@@ -47,10 +47,10 @@ export default async function CategoryPage({ params }: PageProps) {
         }
     });
 
-    // Filter out records where prompt is null (due to isPublished filter)
+    // Filter out records where prompt is null or not published
     // and map to Prompt type
     const mappedPrompts: Prompt[] = promptCategoryRecords
-        .filter(pc => pc.prompt)
+        .filter(pc => pc.prompt && pc.prompt.isPublished)
         .map(pc => {
             const p = pc.prompt;
             return {
