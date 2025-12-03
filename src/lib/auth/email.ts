@@ -17,7 +17,7 @@ export async function sendVerificationEmail(email: string, code: string) {
       from: `${appName} <${fromEmail}>`,
       to: email,
       subject: `Your verification code for ${appName}`,
-      reply_to: process.env.SUPPORT_EMAIL || fromEmail,
+      replyTo: process.env.SUPPORT_EMAIL || fromEmail,
       headers: {
         'X-Entity-Ref-ID': nanoid(),
       },
