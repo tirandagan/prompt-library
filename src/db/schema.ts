@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, timestamp, primaryKey, boolean, uuid, index } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, text, integer, timestamp, primaryKey, boolean, uuid, index, vector } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Categories table
@@ -38,6 +38,7 @@ export const prompts = pgTable('prompts', {
     useCase: text('use_case'), // Specific use case description
     industry: varchar('industry', { length: 100 }), // Target industry (optional)
     isPublished: boolean('is_published').default(false).notNull(), // Draft vs published
+    embedding: vector('embedding', { dimensions: 1536 }),
     publishedAt: timestamp('published_at'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

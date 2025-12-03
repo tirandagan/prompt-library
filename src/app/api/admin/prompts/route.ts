@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { prompts, promptCategories, promptTools, promptTags } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { generateEmbedding } from '@/lib/ai';
 
 // GET all prompts with relationships
 export async function GET(request: Request) {
@@ -41,9 +42,14 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { categories: categoryIds, tools: toolIds, tags: tagIds, ...promptData } = body;
         
+        // Generate embedding
+        const embeddingText = `${promptData.name}\n${promptData.description}\n${promptData.promptText}`;
+        const embedding = await generateEmbedding(embeddingText);
+
         // Insert prompt
         const [newPrompt] = await db.insert(prompts).values({
             ...promptData,
+            embedding,
             publishedAt: promptData.publishedAt ? new Date(promptData.publishedAt) : null,
             createdAt: new Date(),
             updatedAt: new Date(),

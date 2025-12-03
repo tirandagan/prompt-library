@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { prompts, promptCategories, promptTools, promptTags } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { generateEmbedding } from '@/lib/ai';
 
 // GET single prompt with all relationships
 export async function GET(
@@ -50,19 +51,28 @@ export async function PATCH(
     try {
         const { id } = await params;
         const body = await request.json();
-        console.log('PATCH prompt body:', body);
         const { categories: categoryIds, tools: toolIds, tags: tagIds, ...promptData } = body;
         
-        // Ensure publishedAt is a Date object if it exists and is a string
-        if (promptData.publishedAt && typeof promptData.publishedAt === 'string') {
-            promptData.publishedAt = new Date(promptData.publishedAt);
+        let embedding = undefined;
+        if (promptData.name || promptData.description || promptData.promptText) {
+            const existing = await db.query.prompts.findFirst({ where: eq(prompts.id, parseInt(id)) });
+            if (existing) {
+                const name = promptData.name || existing.name;
+                const description = promptData.description || existing.description;
+                const text = promptData.promptText || existing.promptText;
+                const embeddingText = `${name}\n${description}\n${text}`;
+                embedding = await generateEmbedding(embeddingText);
+            }
         }
 
-        console.log('Updating prompt with data:', promptData);
+        const updateData = { ...promptData, updatedAt: new Date() };
+        if (embedding) {
+            updateData.embedding = embedding;
+        }
 
         // Update prompt
         const [updatedPrompt] = await db.update(prompts)
-            .set({ ...promptData, updatedAt: new Date() })
+            .set(updateData)
             .where(eq(prompts.id, parseInt(id)))
             .returning();
         

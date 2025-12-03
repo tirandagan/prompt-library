@@ -1,7 +1,7 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { generateObject, generateText, type LanguageModel } from "ai";
+import { generateObject, generateText, type LanguageModel, embed } from "ai";
 import { z } from "zod";
 
 // Helper to get model instance with optional custom key
@@ -76,4 +76,16 @@ export async function executePrompt(
     });
 
     return result.text;
+}
+
+export async function generateEmbedding(text: string) {
+  const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  const embeddingModel = openai.embedding("text-embedding-3-small");
+  
+  const result = await embed({
+    model: embeddingModel,
+    value: text,
+  });
+  
+  return result.embedding;
 }
