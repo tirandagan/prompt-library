@@ -8,17 +8,38 @@ import { ArrowRight, Sparkles, Search, Zap, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Toast, useToast } from "@/components/ui/Toast";
 import { useState, useEffect } from "react";
+import { searchPrompts, SearchResult } from "@/app/actions/search";
 
 export default function Home() {
   const { toasts, showToast, removeToast } = useToast();
   const [categories, setCategories] = useState<any[]>([]);
   const [featuredPrompts, setFeaturedPrompts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     fetchCategories();
     fetchFeaturedPrompts();
   }, []);
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      const results = await searchPrompts(searchQuery);
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Search failed:", error);
+      showToast("Search failed. Please try again.", "error");
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
@@ -80,12 +101,45 @@ export default function Home() {
                   type="text"
                   placeholder="Search for 'SEO Blog Post' or 'Python Refactoring'..."
                   className="w-full h-10 px-4 bg-transparent outline-none text-foreground placeholder:text-muted-foreground"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 />
-                <Button size="lg" className="rounded-full px-8 shadow-lg shadow-primary/25">
-                  Search
+                <Button 
+                  size="lg" 
+                  className="rounded-full px-8 shadow-lg shadow-primary/25"
+                  onClick={handleSearch}
+                  disabled={isSearching}
+                >
+                  {isSearching ? 'Searching...' : 'Search'}
                 </Button>
               </div>
             </div>
+
+            {/* Search Results */}
+            {(searchResults.length > 0 || (isSearching)) && (
+              <div className="absolute top-full left-0 right-0 mt-4 bg-card border border-border rounded-xl shadow-2xl overflow-hidden z-50 p-2">
+                {isSearching ? (
+                  <div className="p-4 text-center text-muted-foreground">Searching...</div>
+                ) : searchResults.length > 0 ? (
+                  <div className="flex flex-col">
+                    {searchResults.map((result) => (
+                      <Link 
+                        key={result.id} 
+                        href={`/prompt/${result.slug}`}
+                        className="flex items-center justify-between p-3 hover:bg-accent rounded-lg transition-colors"
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-medium text-foreground">{result.name}</h4>
+                          <p className="text-sm text-muted-foreground line-clamp-1">{result.description}</p>
+                        </div>
+                        <Badge variant="secondary" className="ml-2">{Math.round(result.similarity * 100)}% match</Badge>
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            )}
 
             <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
               <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3" /> Trending:</span>

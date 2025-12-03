@@ -8,6 +8,10 @@ async function migrate() {
     console.log('🔄 Running database migration...');
 
     try {
+        // Enable pgvector extension
+        await db.execute(sql`CREATE EXTENSION IF NOT EXISTS vector`);
+        console.log('✅ Enabled pgvector extension');
+
         // Create prompt_relationships table
         await db.execute(sql`
             CREATE TABLE IF NOT EXISTS prompt_relationships (

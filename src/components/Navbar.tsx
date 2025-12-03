@@ -2,13 +2,60 @@
 
 import Link from "next/link";
 import { Search, Menu, X, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { searchPrompts, SearchResult } from "@/app/actions/search";
+import { Badge } from "@/components/ui/Badge";
+import { useToast } from "@/components/ui/Toast";
 
 export function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showResults, setShowResults] = useState(false);
+    const searchRef = useRef<HTMLDivElement>(null);
+    const { showToast } = useToast();
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setShowResults(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleSearch = async (query: string) => {
+        setSearchQuery(query);
+        if (!query.trim()) {
+            setSearchResults([]);
+            setShowResults(false);
+            return;
+        }
+
+        setIsSearching(true);
+        setShowResults(true);
+        try {
+            const results = await searchPrompts(query);
+            setSearchResults(results);
+        } catch (error) {
+            console.error("Search failed:", error);
+            showToast("Search failed", "error");
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleSearch(searchQuery);
+        }
+    };
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
@@ -32,13 +79,42 @@ export function Navbar() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <div className="relative hidden md:block">
+                    <div className="relative hidden md:block" ref={searchRef}>
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <input
                             type="search"
                             placeholder="Search prompts..."
                             className="h-10 w-64 rounded-full border border-input bg-secondary/50 pl-10 pr-4 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground"
+                            value={searchQuery}
+                            onChange={(e) => handleSearch(e.target.value)}
+                            onKeyDown={handleKeyDown}
                         />
+                        {showResults && (searchQuery.length > 0) && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50 p-2 w-[350px] -left-1/2">
+                                {isSearching ? (
+                                    <div className="p-4 text-center text-muted-foreground text-sm">Searching...</div>
+                                ) : searchResults.length > 0 ? (
+                                    <div className="flex flex-col max-h-[400px] overflow-y-auto">
+                                        {searchResults.map((result) => (
+                                            <Link 
+                                                key={result.id} 
+                                                href={`/prompt/${result.slug}`}
+                                                className="flex items-center gap-3 p-3 hover:bg-accent rounded-lg transition-colors group"
+                                                onClick={() => setShowResults(false)}
+                                            >
+                                                <div className="flex-1 min-w-0">
+                                                    <h4 className="font-medium text-foreground text-sm truncate group-hover:text-primary transition-colors">{result.name}</h4>
+                                                    <p className="text-xs text-muted-foreground line-clamp-1">{result.description}</p>
+                                                </div>
+                                                <Badge variant="secondary" className="text-[10px] px-1.5 h-5">{Math.round(result.similarity * 100)}%</Badge>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-4 text-center text-muted-foreground text-sm">No results found</div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="hidden md:flex items-center gap-2">
