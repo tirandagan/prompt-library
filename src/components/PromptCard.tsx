@@ -86,7 +86,18 @@ export function PromptCard({ prompt, className, onCopy }: PromptCardProps) {
             "group flex flex-col justify-between rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 hover:border-primary/20",
             className
         )}>
-            <div>
+            {prompt.images && prompt.images.length > 0 && (
+                <div className="relative aspect-video w-full overflow-hidden rounded-t-xl -mt-5 -mx-5 mb-5 w-[calc(100%+2.5rem)]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                        src={prompt.images[0].url} 
+                        alt={prompt.images[0].altText || prompt.name}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
+                </div>
+            )}
+            <div className={cn(prompt.images && prompt.images.length > 0 ? "mt-0" : "")}>
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex flex-wrap gap-2">
                         <Badge variant="secondary" className="bg-secondary text-secondary-foreground hover:bg-secondary/80 font-medium">

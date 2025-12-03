@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/Button";
-import { Wand2, Check, X, Loader2 } from "lucide-react";
+import { Wand2, Check, X, Loader2, Trash2, Upload, ArrowUp, ArrowDown, Image as ImageIcon } from "lucide-react";
 import { Toast, useToast } from "@/components/ui/Toast";
 import { TagInput, Tag } from "./TagInput";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +23,7 @@ export interface PromptFormData {
     categories: number[];
     tools: number[];
     tags: number[];
+    images: { url: string; altText?: string }[];
 }
 
 interface Category {
@@ -60,6 +61,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
         categories: [],
         tools: [],
         tags: [],
+        images: [],
     });
 
     const [categories, setCategories] = useState<Category[]>([]);
@@ -70,6 +72,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
     const [pendingSuggestions, setPendingSuggestions] = useState<Partial<PromptFormData> | null>(null);
     const { toasts, showToast, removeToast } = useToast();
     const { user } = useAuth();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchResources();
@@ -286,6 +289,59 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
         } else {
             setPendingSuggestions(newPending);
         }
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0) return;
+        
+        const file = e.target.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+            setLoading(true);
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            
+            if (!res.ok) throw new Error('Upload failed');
+            
+            const data = await res.json();
+            
+            setFormData(prev => ({
+                ...prev,
+                images: [...(prev.images || []), { url: data.url, altText: file.name.split('.')[0] }]
+            }));
+            
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            showToast('Failed to upload image', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const removeImage = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            images: prev.images.filter((_, i) => i !== index)
+        }));
+    };
+
+    const moveImage = (index: number, direction: 'up' | 'down') => {
+        setFormData(prev => {
+            const newImages = [...prev.images];
+            if (direction === 'up' && index > 0) {
+                [newImages[index], newImages[index - 1]] = [newImages[index - 1], newImages[index]];
+            } else if (direction === 'down' && index < newImages.length - 1) {
+                [newImages[index], newImages[index + 1]] = [newImages[index + 1], newImages[index]];
+            }
+            return { ...prev, images: newImages };
+        });
     };
 
     return (
@@ -523,6 +579,98 @@ export function PromptForm({ initialData, onSubmit, onCancel, submitLabel = "Sav
                         />
                     </div>
                 </div>
+            </div>
+
+            {/* Images */}
+            <div className="bg-card rounded-xl border border-border p-6">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold">Images</h2>
+                    <div>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleImageUpload}
+                            accept="image/*"
+                            className="hidden"
+                        />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={loading}
+                        >
+                            <Upload className="w-4 h-4 mr-2" />
+                            Upload Image
+                        </Button>
+                    </div>
+                </div>
+                
+                {formData.images?.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        {formData.images.map((img, index) => (
+                            <div key={index} className="relative group border border-border rounded-lg overflow-hidden bg-secondary/10">
+                                <div className="aspect-video relative">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img 
+                                        src={img.url} 
+                                        alt={img.altText || 'Prompt image'} 
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <div className="p-2 flex gap-2 justify-between items-center bg-background/80 backdrop-blur-sm absolute bottom-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex gap-1">
+                                        <Button
+                                            type="button"
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-8 w-8"
+                                            onClick={() => moveImage(index, 'up')}
+                                            disabled={index === 0}
+                                        >
+                                            <ArrowUp className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-8 w-8"
+                                            onClick={() => moveImage(index, 'down')}
+                                            disabled={index === formData.images.length - 1}
+                                        >
+                                            <ArrowDown className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        size="icon"
+                                        variant="destructive"
+                                        className="h-8 w-8"
+                                        onClick={() => removeImage(index)}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                <input
+                                    type="text"
+                                    value={img.altText || ''}
+                                    onChange={(e) => {
+                                        const newImages = [...formData.images];
+                                        newImages[index].altText = e.target.value;
+                                        setFormData({ ...formData, images: newImages });
+                                    }}
+                                    placeholder="Alt text description"
+                                    className="w-full px-3 py-2 text-xs border-t border-border bg-background"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-lg">
+                        <ImageIcon className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                        <p>No images uploaded yet</p>
+                        <p className="text-xs mt-1">Upload screenshots or examples to enhance your prompt card</p>
+                    </div>
+                )}
             </div>
 
             {/* Categories */}

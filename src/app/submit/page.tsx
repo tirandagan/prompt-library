@@ -92,6 +92,7 @@ export default function SubmitPromptPage() {
                     categories: [],
                     tools: [],
                     tags: [],
+                    images: [],
                 }}
             />
         </div>

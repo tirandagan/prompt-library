@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { Button } from "@/components/ui/Button";
-import { Plus, Pencil, Trash2, X, FolderKanban } from "lucide-react";
+import { Plus, Pencil, Trash2, X, FolderKanban, Smile } from "lucide-react";
 
 interface Category {
     id: number;
@@ -15,6 +16,7 @@ interface Category {
 export default function CategoriesPage() {
     const [categories, setCategories] = useState<Category[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [formData, setFormData] = useState({
         slug: '',
@@ -95,6 +97,7 @@ export default function CategoriesPage() {
 
     const closeModal = () => {
         setIsModalOpen(false);
+        setShowEmojiPicker(false);
         setEditingCategory(null);
         setFormData({ slug: '', name: '', icon: '', description: '' });
     };
@@ -203,14 +206,33 @@ export default function CategoriesPage() {
 
                             <div>
                                 <label className="block text-sm font-medium mb-2">Icon (Emoji)</label>
-                                <input
-                                    type="text"
-                                    value={formData.icon}
-                                    onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground text-2xl"
-                                    required
-                                    maxLength={10}
-                                />
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                                        className="w-full px-4 py-2 text-left rounded-lg border border-border bg-background text-foreground text-2xl min-h-[50px] flex items-center justify-between group hover:border-primary/50 transition-colors"
+                                    >
+                                        <span>{formData.icon || <span className="text-muted-foreground text-sm font-normal flex items-center gap-2"><Smile className="w-4 h-4" /> Pick an icon</span>}</span>
+                                        <span className="text-xs text-muted-foreground font-normal opacity-0 group-hover:opacity-100 transition-opacity">Change</span>
+                                    </button>
+                                    
+                                    {showEmojiPicker && (
+                                        <>
+                                            <div className="fixed inset-0 z-[60]" onClick={() => setShowEmojiPicker(false)}></div>
+                                            <div className="absolute bottom-full mb-2 left-0 z-[70]">
+                                                <EmojiPicker
+                                                    onEmojiClick={(emojiData: EmojiClickData) => {
+                                                        setFormData({ ...formData, icon: emojiData.emoji });
+                                                        setShowEmojiPicker(false);
+                                                    }}
+                                                    width={350}
+                                                    height={400}
+                                                    previewConfig={{ showPreview: false }}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
 
                             <div>

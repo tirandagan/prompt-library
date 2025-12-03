@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { prompts, promptCategories, promptTools, promptTags } from '@/db/schema';
+import { prompts, promptCategories, promptTools, promptTags, promptImages } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateEmbedding } from '@/lib/ai';
 
@@ -23,6 +23,7 @@ export async function GET(
                 promptTags: {
                     with: { tag: true }
                 },
+                promptImages: true,
                 sourceRelationships: {
                     with: { targetPrompt: true }
                 },
@@ -51,7 +52,7 @@ export async function PATCH(
     try {
         const { id } = await params;
         const body = await request.json();
-        const { categories: categoryIds, tools: toolIds, tags: tagIds, ...promptData } = body;
+        const { categories: categoryIds, tools: toolIds, tags: tagIds, images, ...promptData } = body;
         
         let embedding = undefined;
         if (promptData.name || promptData.description) {
@@ -112,6 +113,20 @@ export async function PATCH(
                     tagIds.map((tagId: number) => ({ 
                         promptId: parseInt(id), 
                         tagId 
+                    }))
+                );
+            }
+        }
+
+        if (images !== undefined) {
+            await db.delete(promptImages).where(eq(promptImages.promptId, parseInt(id)));
+            if (images.length) {
+                await db.insert(promptImages).values(
+                    images.map((img: any, index: number) => ({
+                        promptId: parseInt(id),
+                        url: img.url,
+                        altText: img.altText,
+                        position: index
                     }))
                 );
             }

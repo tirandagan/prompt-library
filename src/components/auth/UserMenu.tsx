@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/Button";
-import { LogOut, User as UserIcon, Settings, Shield } from "lucide-react";
+import { LogOut, User as UserIcon, Settings, Shield, Bookmark } from "lucide-react";
 import { SignInModal } from "./SignInModal";
 
 export function UserMenu() {
@@ -78,6 +78,14 @@ export function UserMenu() {
                         >
                             <UserIcon className="w-4 h-4 text-muted-foreground" />
                             Profile
+                        </Link>
+                        <Link 
+                            href="/profile/lists"
+                            className="w-full px-4 py-2 text-sm text-foreground hover:bg-secondary flex items-center gap-2 transition-colors"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <Bookmark className="w-4 h-4 text-muted-foreground" />
+                            My Lists
                         </Link>
                         <button className="w-full px-4 py-2 text-sm text-foreground hover:bg-secondary flex items-center gap-2 transition-colors">
                             <Settings className="w-4 h-4 text-muted-foreground" />

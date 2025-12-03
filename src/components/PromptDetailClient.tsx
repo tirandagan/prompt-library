@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Prompt } from "@/lib/data";
-import { ArrowLeft, Copy, Eye, Heart, Share2, Terminal, Check, ExternalLink, Play, AlertCircle, ChevronDown, Pencil, Loader2, Briefcase, Layers, BarChart } from "lucide-react";
+import { ArrowLeft, Copy, Eye, Heart, Share2, Terminal, Check, ExternalLink, Play, AlertCircle, ChevronDown, Pencil, Loader2, Briefcase, Layers, BarChart, Bookmark } from "lucide-react";
 import Link from "next/link";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import { Toast, useToast } from "@/components/ui/Toast";
@@ -11,6 +11,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Modal } from "@/components/ui/Modal";
+import { AddToListModal } from "@/components/AddToListModal";
 
 interface PromptDetailClientProps {
     prompt: Prompt;
@@ -38,6 +39,7 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
     const [isExecuting, setIsExecuting] = useState(false);
     const [executionResult, setExecutionResult] = useState<string | null>(null);
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
+    const [isListModalOpen, setIsListModalOpen] = useState(false);
 
     // Increment view count on mount
     useEffect(() => {
@@ -261,6 +263,33 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
                                     </Link>
                                 )}
                             </div>
+
+                            {prompt.images && prompt.images.length > 0 && (
+                                <div className="mb-8 space-y-4">
+                                    <div className="rounded-xl overflow-hidden border border-border bg-secondary/10 shadow-sm">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img 
+                                            src={prompt.images[0].url} 
+                                            alt={prompt.images[0].altText || prompt.name}
+                                            className="w-full h-auto max-h-[500px] object-cover"
+                                        />
+                                    </div>
+                                    {prompt.images.length > 1 && (
+                                        <div className="grid grid-cols-4 gap-4">
+                                            {prompt.images.slice(1).map((img, index) => (
+                                                <div key={index} className="rounded-lg overflow-hidden border border-border bg-secondary/10 aspect-video cursor-pointer hover:opacity-80 transition-opacity" onClick={() => window.open(img.url, '_blank')}>
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img 
+                                                        src={img.url} 
+                                                        alt={img.altText || `Image ${index + 2}`}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 tracking-tight">{prompt.name}</h1>
                             <p className="text-lg text-muted-foreground mb-8 leading-relaxed">{prompt.description}</p>
@@ -525,6 +554,16 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
                                         <Heart className={cn("w-4 h-4 mr-2", isLiked && "fill-current")} />
                                         {likeCount}
                                     </Button>
+                                    
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 h-11 text-base bg-background hover:bg-secondary"
+                                        onClick={() => setIsListModalOpen(true)}
+                                    >
+                                        <Bookmark className="w-4 h-4 mr-2" />
+                                        Save
+                                    </Button>
+
                                     <Button
                                         variant="outline"
                                         className="flex-1 h-11 text-base bg-background hover:bg-secondary"
@@ -598,6 +637,12 @@ export function PromptDetailClient({ prompt, canEdit = false }: PromptDetailClie
                     </div>
                 </div>
             </Modal>
+            
+            <AddToListModal 
+                isOpen={isListModalOpen}
+                onClose={() => setIsListModalOpen(false)}
+                promptId={prompt.id}
+            />
 
             {/* Toast notifications */}
             {toasts.map((toast) => (

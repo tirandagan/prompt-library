@@ -16,6 +16,7 @@ export type Prompt = {
     useCase?: string;
     industry?: string;
     difficultyLevel?: string;
+    images?: { url: string; altText?: string; position: number }[];
 };
 
 export const CATEGORIES = [

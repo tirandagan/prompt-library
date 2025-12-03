@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { db } from '@/db';
-import { prompts } from '@/db/schema';
+import { prompts, promptImages } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { verifyToken } from '@/lib/auth/jwt';
 import { getSessionByToken } from '@/db/auth-queries';
@@ -21,6 +21,7 @@ export async function GET(request: Request) {
                 promptTags: {
                     with: { tag: true }
                 },
+                promptImages: true,
             },
             orderBy: (prompts, { desc }) => [desc(prompts.likes)],
             limit: 8
@@ -39,7 +40,12 @@ export async function GET(request: Request) {
             likes: p.likes,
             views: p.views,
             tags: p.promptTags.map(pt => pt.tag.name),
-            isLiked: false
+            isLiked: false,
+            images: p.promptImages?.sort((a, b) => a.position - b.position).map(img => ({
+                url: img.url,
+                altText: img.altText || undefined,
+                position: img.position
+            }))
         }));
 
         // Auth & Likes

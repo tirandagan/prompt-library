@@ -28,6 +28,11 @@ export default async function CategoriesPage() {
         views: p.views,
         // Map all tag names
         tags: p.promptTags.map((pt) => pt.tag.name),
+        images: p.promptImages?.sort((a, b) => a.position - b.position).map(img => ({
+            url: img.url,
+            altText: img.altText || undefined,
+            position: img.position
+        }))
     }));
 
     return (

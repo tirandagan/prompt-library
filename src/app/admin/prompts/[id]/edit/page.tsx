@@ -32,6 +32,7 @@ interface Prompt {
     promptCategories: { categoryId: number; category: Category }[];
     promptTools: { toolId: number; tool: any }[];
     promptTags: { tagId: number; tag: any }[];
+    promptImages: { url: string; altText: string | null }[];
 }
 
 export default function EditPromptPage({ params }: { params: Promise<{ id: string }> }) {
@@ -77,6 +78,10 @@ export default function EditPromptPage({ params }: { params: Promise<{ id: strin
         categories: prompt.promptCategories?.map(pc => pc.categoryId) || [],
         tools: prompt.promptTools?.map(pt => pt.toolId) || [],
         tags: prompt.promptTags?.map(pt => pt.tagId) || [],
+        images: prompt.promptImages?.map(img => ({
+            url: img.url,
+            altText: img.altText || ''
+        })) || [],
     });
 
     const handleSubmit = async (data: PromptFormData) => {

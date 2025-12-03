@@ -90,6 +90,7 @@ export async function getAllPromptsWithRelations() {
             promptTags: {
                 with: { tag: true }
             },
+            promptImages: true,
         },
         orderBy: (prompts, { desc }) => [desc(prompts.likes)],
     });
@@ -223,6 +224,27 @@ export async function getUserLists(userId: number) {
         orderBy: desc(userLists.createdAt),
         with: {
             listPrompts: true // Get count efficiently if needed later
+        }
+    });
+}
+
+export async function getListWithPrompts(listId: number, userId: number) {
+    return await db.query.userLists.findFirst({
+        where: and(
+            eq(userLists.id, listId),
+            eq(userLists.userId, userId)
+        ),
+        with: {
+            listPrompts: {
+                with: {
+                    prompt: {
+                        with: {
+                            promptTools: { with: { tool: true } },
+                            promptCategories: { with: { category: true } }
+                        }
+                    }
+                }
+            }
         }
     });
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { prompts, promptCategories, promptTools, promptTags } from '@/db/schema';
+import { prompts, promptCategories, promptTools, promptTags, promptImages } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateEmbedding } from '@/lib/ai';
 
@@ -22,6 +22,7 @@ export async function GET(request: Request) {
                 promptTags: {
                     with: { tag: true }
                 },
+                promptImages: true,
                 sourceRelationships: {
                     with: { targetPrompt: true }
                 }
@@ -40,7 +41,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { categories: categoryIds, tools: toolIds, tags: tagIds, ...promptData } = body;
+        const { categories: categoryIds, tools: toolIds, tags: tagIds, images, ...promptData } = body;
         
         // Generate embedding (Name + Description only)
         const embeddingText = `${promptData.name}\n${promptData.description}`;
@@ -81,6 +82,18 @@ export async function POST(request: Request) {
                 tagIds.map((tagId: number) => ({ 
                     promptId: newPrompt.id, 
                     tagId 
+                }))
+            );
+        }
+
+        // Insert images
+        if (images?.length) {
+            await db.insert(promptImages).values(
+                images.map((img: any, index: number) => ({
+                    promptId: newPrompt.id,
+                    url: img.url,
+                    altText: img.altText,
+                    position: index
                 }))
             );
         }

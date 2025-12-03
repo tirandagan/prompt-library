@@ -29,7 +29,8 @@ export default async function PromptDetailPage({ params }: PageProps) {
             },
             promptCategories: {
                 with: { category: true }
-            }
+            },
+            promptImages: true
         }
     });
 
@@ -46,7 +47,8 @@ export default async function PromptDetailPage({ params }: PageProps) {
                 },
                 promptCategories: {
                     with: { category: true }
-                }
+                },
+                promptImages: true
             }
         });
     }
@@ -73,6 +75,11 @@ export default async function PromptDetailPage({ params }: PageProps) {
         useCase: promptData.useCase || undefined,
         industry: promptData.industry || undefined,
         difficultyLevel: promptData.difficultyLevel || undefined,
+        images: promptData.promptImages?.sort((a, b) => a.position - b.position).map(img => ({
+            url: img.url,
+            altText: img.altText || undefined,
+            position: img.position
+        }))
     };
 
     if (user) {

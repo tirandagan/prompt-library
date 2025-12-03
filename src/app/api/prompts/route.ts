@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { prompts, promptCategories, promptTools, promptTags, categories } from '@/db/schema';
+import { prompts, promptCategories, promptTools, promptTags, categories, promptImages } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 // GET prompts by category slug
@@ -33,6 +33,7 @@ export async function GET(request: Request) {
                 promptTags: {
                     with: { tag: true }
                 },
+                promptImages: true,
             },
             orderBy: (prompts, { desc }) => [desc(prompts.likes)],
         });

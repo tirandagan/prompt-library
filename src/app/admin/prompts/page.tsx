@@ -17,6 +17,8 @@ interface Prompt {
     id: number;
     name: string;
     description: string;
+    whatItDoes?: string;
+    tips?: string;
     promptText: string;
     slug: string;
     promptType: string;
@@ -29,6 +31,7 @@ interface Prompt {
     promptCategories: { categoryId: number; category: Category }[];
     promptTools: { toolId: number; tool: any }[];
     promptTags: { tagId: number; tag: any }[];
+    promptImages?: { url: string; altText: string; position: number }[];
 }
 
 export default function PromptsPage() {
@@ -162,7 +165,7 @@ export default function PromptsPage() {
             // Category filter
             if (filters.category !== 'all') {
                 const categoryId = parseInt(filters.category);
-                if (!prompt.promptCategories.some(pc => pc.categoryId === categoryId)) {
+                if (!prompt.promptCategories?.some(pc => pc.categoryId === categoryId)) {
                     return false;
                 }
             }
@@ -202,6 +205,8 @@ export default function PromptsPage() {
         name: prompt.name,
         slug: prompt.slug,
         description: prompt.description,
+        whatItDoes: prompt.whatItDoes || '',
+        tips: prompt.tips || '',
         promptText: prompt.promptText,
         promptType: prompt.promptType,
         author: prompt.author,
@@ -212,6 +217,7 @@ export default function PromptsPage() {
         categories: prompt.promptCategories?.map(pc => pc.categoryId) || [],
         tools: prompt.promptTools?.map(pt => pt.toolId) || [],
         tags: prompt.promptTags?.map(pt => pt.tagId) || [],
+        images: prompt.promptImages?.sort((a, b) => a.position - b.position) || [],
     });
 
     return (
